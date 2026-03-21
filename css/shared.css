@@ -1,0 +1,196 @@
+:root {
+  --primary: #6B7FD7;
+  --primary-light: #8E9FE8;
+  --primary-dark: #5468B7;
+
+  --bg: #F5F3FA;
+  --surface: #FFFFFF;
+  --surface-alt: #EDE8F5;
+
+  --text: #2D2B3D;
+  --text-muted: #7B7891;
+  --text-on-primary: #FFFFFF;
+
+  --sleep-night: #6B7FD7;
+  --sleep-nap: #B8A9E8;
+  --wake: #F5C76B;
+  --warning: #E8A07B;
+  --success: #7BC8A4;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 3px rgba(45, 43, 61, 0.08);
+  --shadow-md: 0 4px 12px rgba(45, 43, 61, 0.12);
+
+  --nav-height: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Screen system */
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--nav-height) + var(--safe-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: calc(16px + var(--safe-top)) 16px 24px;
+  display: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.screen.active {
+  display: block;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--surface-alt);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(45, 43, 61, 0.06);
+}
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: color 0.2s;
+  min-width: 60px;
+}
+
+.nav-btn svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-btn.active {
+  color: var(--primary);
+}
+
+.nav-btn:active {
+  transform: scale(0.92);
+}
+
+/* App header */
+.app-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.app-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.app-header h1 span {
+  font-size: 24px;
+}
+
+/* Screen titles */
+.screen-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Utility */
+.container {
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+/* Disclaimer */
+.disclaimer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 16px 8px 8px;
+  line-height: 1.5;
+}
+
+/* Scrollbar */
+.screen::-webkit-scrollbar {
+  width: 4px;
+}
+
+.screen::-webkit-scrollbar-thumb {
+  background: var(--surface-alt);
+  border-radius: 2px;
+}

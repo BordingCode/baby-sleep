@@ -1,0 +1,122 @@
+/* Environment cards */
+.env-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.env-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.env-icon {
+  font-size: 28px;
+}
+
+.env-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.env-recommendation {
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.env-details {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.env-tips {
+  list-style: none;
+  padding: 0;
+}
+
+.env-tips li {
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 5px 0 5px 22px;
+  position: relative;
+}
+
+.env-tips li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  color: var(--success);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* TOG guide table */
+.tog-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 13px;
+}
+
+.tog-table th {
+  text-align: left;
+  font-weight: 600;
+  padding: 8px 6px;
+  border-bottom: 2px solid var(--surface-alt);
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tog-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--surface-alt);
+  vertical-align: top;
+}
+
+/* Safe sleep checklist */
+.safe-sleep-list {
+  list-style: none;
+  padding: 0;
+}
+
+.safe-sleep-list li {
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 8px 0 8px 28px;
+  position: relative;
+  border-bottom: 1px solid var(--surface-alt);
+}
+
+.safe-sleep-list li:last-child {
+  border-bottom: none;
+}
+
+.safe-sleep-list li::before {
+  content: '🛡️';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  font-size: 14px;
+}
+
+.env-source {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  font-style: italic;
+}

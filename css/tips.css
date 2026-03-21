@@ -1,0 +1,118 @@
+/* Troubleshooting accordion */
+.tip-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.tip-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tip-header:active {
+  background: var(--surface-alt);
+}
+
+.tip-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.tip-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tip-chevron {
+  width: 20px;
+  height: 20px;
+  stroke: var(--text-muted);
+  fill: none;
+  stroke-width: 2;
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+
+.tip-card.open .tip-chevron {
+  transform: rotate(180deg);
+}
+
+.tip-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.tip-card.open .tip-body {
+  max-height: 800px;
+}
+
+.tip-content {
+  padding: 0 16px 16px;
+}
+
+.tip-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  margin-top: 12px;
+}
+
+.tip-section-label:first-child {
+  margin-top: 0;
+}
+
+.tip-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tip-list li {
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 4px 0 4px 20px;
+  position: relative;
+  color: var(--text);
+}
+
+.tip-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary-light);
+}
+
+.tip-list.solutions li::before {
+  background: var(--success);
+}
+
+/* Relevant badge */
+.tip-relevant {
+  display: none;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--surface-alt);
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.tip-card.relevant .tip-relevant {
+  display: inline-block;
+}

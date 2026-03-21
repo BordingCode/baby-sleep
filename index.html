@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#F5F3FA">
+  <meta name="description" content="Science-based baby sleep guide — know when and how long your baby should sleep">
+  <title>Baby Sleep Guide</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/shared.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/tips.css">
+  <link rel="stylesheet" href="css/environment.css">
+  <link rel="stylesheet" href="css/routines.css">
+</head>
+<body>
+
+  <!-- Schedule Screen (Home) -->
+  <div id="screen-schedule" class="screen active">
+    <div class="container">
+      <div class="app-header">
+        <h1><span>🌙</span> Baby Sleep Guide</h1>
+      </div>
+
+      <div class="age-selector">
+        <div class="age-display" id="age-display">Newborn</div>
+        <div class="age-subtitle">Slide to select your baby's age</div>
+        <div class="slider-wrap">
+          <input type="range" class="age-slider" id="age-slider" min="0" max="12" value="0" step="1">
+          <div class="slider-labels">
+            <span>0m</span>
+            <span>3m</span>
+            <span>6m</span>
+            <span>9m</span>
+            <span>12m</span>
+            <span>18m</span>
+            <span>2y</span>
+            <span>3y</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="total-sleep" id="total-sleep">
+        <div>
+          <div class="total-sleep-label">Total sleep per day</div>
+        </div>
+        <div>
+          <span class="total-sleep-value" id="total-sleep-value">14–17</span>
+          <span class="total-sleep-unit">hours</span>
+        </div>
+      </div>
+
+      <div class="schedule-card" id="schedule-card">
+        <div class="schedule-row">
+          <div class="schedule-icon">⏰</div>
+          <div class="schedule-info">
+            <div class="schedule-label">Wake window</div>
+            <div class="schedule-value" id="wake-window">35–60 min</div>
+          </div>
+          <div class="schedule-bar-wrap">
+            <div class="schedule-bar bar-wake" id="bar-wake"></div>
+          </div>
+        </div>
+        <div class="schedule-row">
+          <div class="schedule-icon">😴</div>
+          <div class="schedule-info">
+            <div class="schedule-label">Number of naps</div>
+            <div class="schedule-value" id="nap-count">4–8 (irregular)</div>
+          </div>
+        </div>
+        <div class="schedule-row">
+          <div class="schedule-icon">🌤️</div>
+          <div class="schedule-info">
+            <div class="schedule-label">Daytime sleep</div>
+            <div class="schedule-value" id="day-sleep">6–8 hours</div>
+          </div>
+          <div class="schedule-bar-wrap">
+            <div class="schedule-bar bar-nap" id="bar-nap"></div>
+          </div>
+        </div>
+        <div class="schedule-row">
+          <div class="schedule-icon">🌙</div>
+          <div class="schedule-info">
+            <div class="schedule-label">Nighttime sleep</div>
+            <div class="schedule-value" id="night-sleep">8–10 hours</div>
+          </div>
+          <div class="schedule-bar-wrap">
+            <div class="schedule-bar bar-night" id="bar-night"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-chip">
+          <div class="info-chip-label">Night feedings</div>
+          <div class="info-chip-value" id="feedings">2–4+</div>
+        </div>
+        <div class="info-chip">
+          <div class="info-chip-label">Can self-soothe</div>
+          <div class="info-chip-value" id="self-soothe">Not yet</div>
+        </div>
+      </div>
+
+      <div class="regression-alert" id="regression-alert">
+        <div class="regression-alert-title">
+          <span>⚠️</span>
+          <span id="regression-title">Sleep Regression</span>
+        </div>
+        <div class="regression-alert-text" id="regression-text"></div>
+      </div>
+
+      <div class="age-note">
+        <div class="age-note-label">What to know</div>
+        <div class="age-note-text" id="age-note">Sleep is irregular and that is completely normal. Day/night confusion is common. No schedule needed yet — follow your baby's cues.</div>
+      </div>
+
+      <div class="disclaimer">
+        General guidance based on pediatric sleep research (AAP, National Sleep Foundation).<br>
+        Consult your pediatrician for specific concerns.
+      </div>
+    </div>
+  </div>
+
+  <!-- Tips Screen -->
+  <div id="screen-tips" class="screen">
+    <div class="container">
+      <div class="screen-title">💡 Sleep Troubleshooting</div>
+      <div id="tips-list"></div>
+      <div class="disclaimer">
+        Every baby is different. If sleep problems persist, consult your pediatrician.
+      </div>
+    </div>
+  </div>
+
+  <!-- Environment Screen -->
+  <div id="screen-environment" class="screen">
+    <div class="container">
+      <div class="screen-title">🏠 Sleep Environment</div>
+      <div id="env-list"></div>
+    </div>
+  </div>
+
+  <!-- Routines Screen -->
+  <div id="screen-routines" class="screen">
+    <div class="container">
+      <div class="screen-title">📋 Bedtime Routines</div>
+      <div class="routine-age-label" id="routine-age-label">For: Newborn (0–3 months)</div>
+      <div id="routines-content"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-screen="schedule">
+      <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span>Schedule</span>
+    </button>
+    <button class="nav-btn" data-screen="tips">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span>Tips</span>
+    </button>
+    <button class="nav-btn" data-screen="environment">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Room</span>
+    </button>
+    <button class="nav-btn" data-screen="routines">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Routine</span>
+    </button>
+  </nav>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

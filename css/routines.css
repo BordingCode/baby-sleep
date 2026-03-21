@@ -1,0 +1,117 @@
+/* Routine section */
+.routine-age-label {
+  font-size: 14px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.routine-section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.routine-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.routine-duration {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* Timeline steps */
+.routine-steps {
+  position: relative;
+  padding-left: 36px;
+}
+
+.routine-steps::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--surface-alt);
+  border-radius: 1px;
+}
+
+.routine-step {
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.routine-step:last-child {
+  padding-bottom: 0;
+}
+
+.routine-step-icon {
+  position: absolute;
+  left: -36px;
+  top: -1px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 2px solid var(--surface-alt);
+  border-radius: 50%;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.routine-step-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.routine-step-duration {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Routine tip */
+.routine-tip {
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.routine-tip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.routine-tip-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* Nap note */
+.routine-nap-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}

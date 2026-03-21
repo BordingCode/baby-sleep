@@ -1,0 +1,242 @@
+/* Age selector */
+.age-selector {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.age-display {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+  transition: all 0.2s;
+}
+
+.age-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* Range slider */
+.slider-wrap {
+  padding: 0 4px;
+}
+
+.age-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--surface-alt), var(--primary-light));
+  outline: none;
+  margin: 8px 0;
+}
+
+.age-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 2px 8px rgba(107, 127, 215, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.age-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+}
+
+.age-slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 2px 8px rgba(107, 127, 215, 0.4);
+  cursor: pointer;
+  border: none;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 0 0;
+}
+
+/* Schedule card */
+.schedule-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.schedule-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.schedule-row:last-child {
+  margin-bottom: 0;
+}
+
+.schedule-icon {
+  font-size: 20px;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.schedule-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.schedule-value {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.schedule-bar-wrap {
+  width: 80px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.schedule-bar {
+  height: 8px;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.bar-wake { background: var(--wake); }
+.bar-nap { background: var(--sleep-nap); }
+.bar-night { background: var(--sleep-night); }
+
+/* Total sleep highlight */
+.total-sleep {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  color: var(--text-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-md);
+}
+
+.total-sleep-label {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.total-sleep-value {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.total-sleep-unit {
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Regression alert */
+.regression-alert {
+  background: #FFF3ED;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: none;
+}
+
+.regression-alert.visible {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.regression-alert-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #C4723B;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.regression-alert-text {
+  font-size: 13px;
+  color: #8B5A3A;
+  line-height: 1.5;
+}
+
+/* Age note */
+.age-note {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.age-note-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.age-note-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+/* Extra info row */
+.info-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.info-chip {
+  flex: 1;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.info-chip-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.info-chip-value {
+  font-size: 15px;
+  font-weight: 600;
+}
