@@ -502,6 +502,122 @@
     });
   }
 
+  // --- Circular 24h Clock ---
+  function renderClock(bedMin, wakeMin, naps, totalH, nightH, napH) {
+    const el = $('mb-clock');
+    const R = 120; // outer radius
+    const r = 85;  // inner radius (donut)
+    const cx = 140, cy = 140;
+    const size = 280;
+
+    // Convert minutes to angle (0 min = top of circle = midnight)
+    function minToAngle(m) {
+      return ((m % 1440) / 1440) * 360 - 90; // -90 so midnight is at top
+    }
+
+    function polarToXY(angle, radius) {
+      const rad = (angle * Math.PI) / 180;
+      return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
+    }
+
+    function arcPath(startMin, durationMin, outerR, innerR) {
+      const startAngle = minToAngle(startMin);
+      const endAngle = minToAngle(startMin + durationMin);
+      const sweep = durationMin >= 720 ? 1 : 0;
+
+      const outerStart = polarToXY(startAngle, outerR);
+      const outerEnd = polarToXY(endAngle, outerR);
+      const innerStart = polarToXY(endAngle, innerR);
+      const innerEnd = polarToXY(startAngle, innerR);
+
+      return `M ${outerStart.x} ${outerStart.y}
+              A ${outerR} ${outerR} 0 ${sweep} 1 ${outerEnd.x} ${outerEnd.y}
+              L ${innerStart.x} ${innerStart.y}
+              A ${innerR} ${innerR} 0 ${sweep} 0 ${innerEnd.x} ${innerEnd.y}
+              Z`;
+    }
+
+    // Night sleep duration
+    let nightDur = wakeMin - bedMin;
+    if (nightDur <= 0) nightDur += 1440;
+
+    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+
+    // Background circle (awake color)
+    svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--surface-alt)" stroke-width="${R - r}" />`;
+    // Redraw as donut
+    svg += `<path d="${arcPath(0, 1440, R, r)}" fill="var(--surface-alt)" opacity="0.5"/>`;
+
+    // Night sleep arc
+    svg += `<path d="${arcPath(bedMin, nightDur, R, r)}" fill="var(--sleep-night)" opacity="0.9"/>`;
+
+    // Nap arcs
+    naps.forEach(n => {
+      const start = t2m(n.start);
+      const dur = napDuration(n);
+      svg += `<path d="${arcPath(start, dur, R, r)}" fill="var(--sleep-nap)" opacity="0.85"/>`;
+    });
+
+    // Hour tick marks and labels
+    for (let h = 0; h < 24; h++) {
+      const angle = minToAngle(h * 60);
+      const tickOuter = polarToXY(angle, R + 2);
+      const tickInner = polarToXY(angle, R - 3);
+      const isMajor = h % 6 === 0;
+      svg += `<line x1="${tickOuter.x}" y1="${tickOuter.y}" x2="${tickInner.x}" y2="${tickInner.y}"
+              stroke="var(--text-muted)" stroke-width="${isMajor ? 1.5 : 0.5}" opacity="${isMajor ? 0.7 : 0.3}"/>`;
+
+      if (isMajor) {
+        const lp = polarToXY(angle, R + 14);
+        const label = h === 0 ? '0' : h.toString();
+        svg += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" dominant-baseline="central"
+                font-size="10" font-weight="500" fill="var(--text-muted)">${label}</text>`;
+      }
+    }
+
+    // Bedtime marker
+    const bedAngle = minToAngle(bedMin);
+    const bedP = polarToXY(bedAngle, R + 6);
+    svg += `<circle cx="${bedP.x}" cy="${bedP.y}" r="4" fill="var(--sleep-night)" stroke="var(--surface)" stroke-width="1.5"/>`;
+
+    // Wake marker
+    const wakeAngle = minToAngle(wakeMin);
+    const wakeP = polarToXY(wakeAngle, R + 6);
+    svg += `<circle cx="${wakeP.x}" cy="${wakeP.y}" r="4" fill="var(--wake)" stroke="var(--surface)" stroke-width="1.5"/>`;
+
+    // Nap labels on the arcs
+    naps.forEach((n, i) => {
+      const start = t2m(n.start);
+      const dur = napDuration(n);
+      if (dur >= 30) {
+        const midAngle = minToAngle(start + dur / 2);
+        const lp = polarToXY(midAngle, (R + r) / 2);
+        svg += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" dominant-baseline="central"
+                font-size="9" font-weight="600" fill="white">N${i + 1}</text>`;
+      }
+    });
+
+    svg += '</svg>';
+
+    let html = '<div class="sleep-clock-wrap"><div class="sleep-clock">';
+    html += svg;
+    html += `<div class="clock-center">
+      <div class="clock-total">${totalH.toFixed(1)}<span class="clock-total-unit">h</span></div>
+      <div class="clock-sub">
+        🌙 ${nightH.toFixed(1)}h night<br>
+        ${napH > 0 ? '☀️ ' + napH.toFixed(1) + 'h naps' : ''}
+      </div>
+    </div>`;
+    html += '</div></div>';
+    html += '<div class="clock-legend">';
+    html += '<span><span class="legend-dot" style="background:var(--sleep-night)"></span>Night</span>';
+    html += '<span><span class="legend-dot" style="background:var(--sleep-nap)"></span>Naps</span>';
+    html += '<span><span class="legend-dot" style="background:var(--surface-alt)"></span>Awake</span>';
+    html += '</div>';
+
+    el.innerHTML = html;
+  }
+
   function renderResults() {
     if (!mb.birthday) return;
     const months = getAgeMonths(mb.birthday);
@@ -542,29 +658,8 @@
     const recNightH = recNightMins / 60;
     const recTotalH = (age.totalSleepHours.min + age.totalSleepHours.max) / 2;
 
-    // --- Timeline ---
-    const blocks = [];
-    blocks.push({ type: 'night', start: bedMin, duration: actualNight, label: 'Night' });
-    sortedNaps.forEach((n, i) => {
-      blocks.push({ type: 'nap', start: t2m(n.start), duration: napDuration(n), label: 'Nap ' + (i + 1) });
-    });
-
-    let tlHtml = '<div class="timeline-section"><div class="timeline-title">Your Baby\'s Day</div>';
-    tlHtml += '<div class="timeline-bar">';
-    blocks.forEach(b => {
-      let off = b.start - bedMin; if (off < 0) off += 1440;
-      const left = (off / 1440) * 100;
-      const w = Math.max((b.duration / 1440) * 100, 0.5);
-      tlHtml += `<div class="timeline-block ${b.type}" style="left:${left}%;width:${w}%">${b.duration >= 60 ? b.label : ''}</div>`;
-    });
-    tlHtml += '</div>';
-    tlHtml += `<div class="timeline-labels"><span>${m2t(bedMin)}</span><span>${m2t(bedMin + 720)}</span><span>${m2t(bedMin)}</span></div>`;
-    tlHtml += '<div class="timeline-legend">';
-    tlHtml += '<span><span class="legend-dot" style="background:var(--sleep-night)"></span>Night</span>';
-    tlHtml += '<span><span class="legend-dot" style="background:var(--sleep-nap)"></span>Naps</span>';
-    tlHtml += '<span><span class="legend-dot" style="background:var(--wake);opacity:0.5"></span>Awake</span>';
-    tlHtml += '</div></div>';
-    $('mb-timeline').innerHTML = tlHtml;
+    // --- Circular Clock ---
+    renderClock(bedMin, wakeMin, sortedNaps, actualTotalH, actualNightH, actualNapH);
 
     // --- Comparison cards ---
     let cHtml = '<div class="checks-section">';
@@ -793,7 +888,7 @@
     } else {
       $('mb-age-badge').innerHTML = '';
       $('mb-routine-section').style.display = 'none';
-      $('mb-timeline').innerHTML = '';
+      $('mb-clock').innerHTML = '';
       $('mb-comparison').innerHTML = '';
       $('mb-advice').innerHTML = '';
     }

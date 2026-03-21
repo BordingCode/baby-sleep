@@ -1,15 +1,8 @@
 /* My Baby planner */
-.planner-intro {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  line-height: 1.5;
-}
-
 .planner-form {
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 16px 20px;
   margin-bottom: 16px;
   box-shadow: var(--shadow-sm);
 }
@@ -44,7 +37,8 @@
   gap: 8px;
 }
 
-.planner-input input[type="time"] {
+.planner-input input[type="time"],
+.planner-input input[type="date"] {
   font-family: inherit;
   font-size: 16px;
   font-weight: 600;
@@ -57,7 +51,7 @@
   transition: border-color 0.2s;
 }
 
-.planner-input input[type="time"]:focus {
+.planner-input input:focus {
   border-color: var(--primary);
 }
 
@@ -89,11 +83,6 @@
   color: var(--text-on-primary);
 }
 
-.nap-stepper-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
 .nap-stepper-value {
   font-size: 20px;
   font-weight: 700;
@@ -114,9 +103,6 @@
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .nap-time-row {
@@ -161,58 +147,60 @@
   border-color: var(--primary);
 }
 
-/* Timeline */
-.timeline-section {
+/* ---- Sleep Clock ---- */
+.sleep-clock-wrap {
+  display: flex;
+  justify-content: center;
   margin-bottom: 16px;
 }
 
-.timeline-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.timeline-bar {
-  background: var(--surface);
-  border-radius: var(--radius-sm);
-  height: 48px;
+.sleep-clock {
   position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  width: 280px;
+  height: 280px;
 }
 
-.timeline-block {
-  position: absolute;
-  top: 0;
+.sleep-clock svg {
+  width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  color: white;
-  overflow: hidden;
-  border-radius: 4px;
-  min-width: 2px;
+  filter: drop-shadow(0 2px 8px rgba(45, 43, 61, 0.10));
 }
 
-.timeline-block.night { background: var(--sleep-night); }
-.timeline-block.nap { background: var(--sleep-nap); }
-.timeline-block.wake { background: var(--wake); opacity: 0.5; }
+.clock-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
 
-.timeline-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
+.clock-total {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.clock-total-unit {
+  font-size: 13px;
+  font-weight: 500;
   color: var(--text-muted);
-  padding: 4px 0 0;
 }
 
-.timeline-legend {
+.clock-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.clock-legend {
   display: flex;
   gap: 16px;
   justify-content: center;
-  margin-top: 8px;
+  margin-top: 4px;
+  margin-bottom: 8px;
   font-size: 11px;
   color: var(--text-muted);
 }
@@ -303,21 +291,4 @@
 
 .suggested-item-value {
   font-weight: 600;
-}
-
-/* Empty state */
-.planner-empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
-}
-
-.planner-empty-icon {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-
-.planner-empty-text {
-  font-size: 14px;
-  line-height: 1.5;
 }

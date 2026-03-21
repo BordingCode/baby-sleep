@@ -20,17 +20,76 @@
 </head>
 <body>
 
-  <!-- Schedule Screen (Home) -->
-  <div id="screen-schedule" class="screen active">
+  <!-- My Baby Screen (Home) -->
+  <div id="screen-mybaby" class="screen active">
     <div class="container">
       <div class="app-header">
         <h1><span>🌙</span> Baby Sleep Guide</h1>
         <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">☀️</button>
       </div>
 
+      <!-- Birthday -->
+      <div class="planner-form">
+        <div class="planner-row">
+          <div class="planner-label"><span class="planner-label-icon">🎂</span> Birthday</div>
+          <div class="planner-input">
+            <input type="date" id="mb-birthday">
+          </div>
+        </div>
+      </div>
+
+      <div id="mb-age-badge"></div>
+
+      <!-- Clock visualization -->
+      <div id="mb-clock"></div>
+
+      <!-- Routine inputs (hidden until birthday is set) -->
+      <div id="mb-routine-section" style="display:none">
+        <div class="planner-form">
+          <div class="planner-row">
+            <div class="planner-label"><span class="planner-label-icon">🌙</span> Bedtime</div>
+            <div class="planner-input">
+              <input type="time" id="mb-bedtime" value="19:00">
+            </div>
+          </div>
+          <div class="planner-row">
+            <div class="planner-label"><span class="planner-label-icon">🌅</span> Wake up</div>
+            <div class="planner-input">
+              <input type="time" id="mb-waketime" value="07:00">
+            </div>
+          </div>
+          <div class="planner-row">
+            <div class="planner-label"><span class="planner-label-icon">😴</span> Number of naps</div>
+            <div class="nap-stepper">
+              <button class="nap-stepper-btn" id="mb-nap-minus">−</button>
+              <div class="nap-stepper-value" id="mb-nap-count">2</div>
+              <button class="nap-stepper-btn" id="mb-nap-plus">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="mb-nap-times"></div>
+      </div>
+
+      <!-- Results -->
+      <div id="mb-comparison"></div>
+      <div id="mb-advice"></div>
+
+      <div class="disclaimer">
+        Personalized advice based on pediatric sleep science (AAP, National Sleep Foundation).<br>
+        Every baby is unique — consult your pediatrician for specific concerns.
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Screen -->
+  <div id="screen-schedule" class="screen">
+    <div class="container">
+      <div class="screen-title">📊 Sleep by Age</div>
+
       <div class="age-selector">
         <div class="age-display" id="age-display">Newborn</div>
-        <div class="age-subtitle">Slide to select your baby's age</div>
+        <div class="age-subtitle">Slide to select age</div>
         <div class="slider-wrap">
           <input type="range" class="age-slider" id="age-slider" min="0" max="12" value="0" step="1">
           <div class="slider-labels">
@@ -117,69 +176,12 @@
 
       <div class="age-note">
         <div class="age-note-label">What to know</div>
-        <div class="age-note-text" id="age-note">Sleep is irregular and that is completely normal. Day/night confusion is common. No schedule needed yet — follow your baby's cues.</div>
+        <div class="age-note-text" id="age-note"></div>
       </div>
 
       <div class="disclaimer">
         General guidance based on pediatric sleep research (AAP, National Sleep Foundation).<br>
         Consult your pediatrician for specific concerns.
-      </div>
-    </div>
-  </div>
-
-  <!-- My Baby Screen -->
-  <div id="screen-mybaby" class="screen">
-    <div class="container">
-      <div class="screen-title">👶 My Baby's Plan</div>
-
-      <!-- Step 1: Birthday -->
-      <div class="planner-form">
-        <div class="planner-row">
-          <div class="planner-label"><span class="planner-label-icon">🎂</span> Birthday</div>
-          <div class="planner-input">
-            <input type="date" id="mb-birthday">
-          </div>
-        </div>
-      </div>
-
-      <div id="mb-age-badge"></div>
-
-      <!-- Step 2: Actual routine (hidden until birthday is set) -->
-      <div id="mb-routine-section" style="display:none">
-        <div class="planner-form">
-          <div class="planner-row">
-            <div class="planner-label"><span class="planner-label-icon">🌙</span> Bedtime</div>
-            <div class="planner-input">
-              <input type="time" id="mb-bedtime" value="19:00">
-            </div>
-          </div>
-          <div class="planner-row">
-            <div class="planner-label"><span class="planner-label-icon">🌅</span> Wake up</div>
-            <div class="planner-input">
-              <input type="time" id="mb-waketime" value="07:00">
-            </div>
-          </div>
-          <div class="planner-row">
-            <div class="planner-label"><span class="planner-label-icon">😴</span> Number of naps</div>
-            <div class="nap-stepper">
-              <button class="nap-stepper-btn" id="mb-nap-minus">−</button>
-              <div class="nap-stepper-value" id="mb-nap-count">2</div>
-              <button class="nap-stepper-btn" id="mb-nap-plus">+</button>
-            </div>
-          </div>
-        </div>
-
-        <div id="mb-nap-times"></div>
-      </div>
-
-      <!-- Results -->
-      <div id="mb-timeline"></div>
-      <div id="mb-comparison"></div>
-      <div id="mb-advice"></div>
-
-      <div class="disclaimer">
-        Personalized advice based on pediatric sleep science (AAP, National Sleep Foundation).<br>
-        Every baby is unique — consult your pediatrician for specific concerns.
       </div>
     </div>
   </div>
@@ -214,13 +216,13 @@
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
-    <button class="nav-btn active" data-screen="schedule">
-      <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <span>Schedule</span>
-    </button>
-    <button class="nav-btn" data-screen="mybaby">
+    <button class="nav-btn active" data-screen="mybaby">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
       <span>My Baby</span>
+    </button>
+    <button class="nav-btn" data-screen="schedule">
+      <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span>By Age</span>
     </button>
     <button class="nav-btn" data-screen="tips">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
