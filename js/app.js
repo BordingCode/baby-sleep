@@ -42,6 +42,7 @@
 
   navBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+      closeClockEdit(); // Bug #3: close popup on tab switch
       const target = btn.dataset.screen;
       navBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -315,7 +316,12 @@
     return data.ageRanges[0];
   }
 
-  function t2m(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+  function t2m(t) {
+    if (!t || typeof t !== 'string') return 0;
+    const p = t.split(':');
+    const h = parseInt(p[0], 10), m = parseInt(p[1], 10);
+    return (isNaN(h) || isNaN(m)) ? 0 : h * 60 + m;
+  }
 
   function m2t(m) {
     m = ((m % 1440) + 1440) % 1440;
@@ -418,33 +424,45 @@
   // When a nap changes, we recompute all later naps using wake windows,
   // and drop naps that don't fit before bedtime.
   function recalcFromNap(changedIdx) {
+    if (!mb.birthday) return;
     const months = getAgeMonths(mb.birthday);
     const age = ageRangeFor(months);
     const bedMin = t2m(mb.bedtime);
+    const wakeMin = t2m(mb.waketime);
     const totalNapH = (age.napSleepHours.min + age.napSleepHours.max) / 2;
-    const avgNapDur = mb.napCount > 0 ? Math.round(totalNapH * 60 / mb.napCount) : 60;
+    const recNapCount = Math.round((age.naps.min + age.naps.max) / 2);
+    const avgNapDur = recNapCount > 0 ? Math.round(totalNapH * 60 / recNapCount) : 60;
 
-    // The changed nap's end time is the anchor — recalc everything after it
     const changedNap = mb.napTimes[changedIdx];
+    if (!changedNap) return;
     let cursor = t2m(changedNap.end);
 
-    // Keep naps up to and including the changed one, rebuild the rest
+    // Keep naps up to and including the changed one
     const kept = mb.napTimes.slice(0, changedIdx + 1);
-    const maxNaps = age.naps.max;
 
-    // Try to fit remaining naps using graduated wake windows
-    for (let i = changedIdx + 1; i < maxNaps; i++) {
-      const wwForThis = getWW(age, i, maxNaps);
+    // Calculate total sleep so far (night + kept naps)
+    let nightMins = wakeMin - bedMin;
+    if (nightMins <= 0) nightMins += 1440;
+    let totalSleepSoFar = nightMins;
+    kept.forEach(n => { totalSleepSoFar += napDuration(n); });
+
+    // Try to fit remaining naps
+    for (let i = changedIdx + 1; i < age.naps.max; i++) {
+      const wwForThis = getWW(age, i, recNapCount);
       const nextStart = cursor + wwForThis;
       const nextEnd = nextStart + avgNapDur;
 
-      // Does this nap fit? Need at least the last wake window before bed
-      const lastWW = getWW(age, maxNaps, maxNaps);
+      // Would adding this nap exceed 23h total sleep?
+      if (totalSleepSoFar + avgNapDur > 23 * 60) break;
+
+      // Does this nap fit before bedtime?
+      const lastWW = getWW(age, recNapCount, recNapCount);
       let timeToBed = bedMin - nextEnd;
       if (timeToBed < 0) timeToBed += 1440;
       if (timeToBed < lastWW * 0.4 || timeToBed > 720) break;
 
       kept.push({ start: m2t(Math.round(nextStart)), end: m2t(Math.round(nextEnd)) });
+      totalSleepSoFar += avgNapDur;
       cursor = nextEnd;
     }
 
@@ -459,6 +477,8 @@
   function napDuration(nap) {
     let d = t2m(nap.end) - t2m(nap.start);
     if (d <= 0) d += 1440;
+    // Clamp: if "duration" > 12 hours, the user probably set times wrong — assume short nap
+    if (d > 720) d = 1440 - d;
     return d;
   }
 
@@ -472,6 +492,7 @@
       mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
       saveMB();
     }
+    mb.napTimes = mb.napTimes.slice(0, mb.napCount);
 
     let html = '<div class="nap-times"><div class="nap-times-title">😴 Nap Times</div>';
     for (let i = 0; i < mb.napCount; i++) {
@@ -571,40 +592,55 @@
     popup.querySelectorAll('input').forEach(inp => {
       inp.addEventListener('change', () => {
         const field = inp.dataset.field;
+        const reopenType = clockEditOpen ? clockEditOpen.type : null;
+        const reopenIdx = clockEditOpen ? clockEditOpen.idx : 0;
+
         if (field === 'bedtime') {
           mb.bedtime = inp.value;
           $('mb-bedtime').value = inp.value;
+          saveMB();
+          renderNapInputs();
+          renderResults();
+          // Re-open same popup after re-render
+          clockEditOpen = null;
+          showClockEdit(reopenType, reopenIdx);
         } else if (field === 'waketime') {
           mb.waketime = inp.value;
           $('mb-waketime').value = inp.value;
+          saveMB();
+          renderNapInputs();
+          renderResults();
+          clockEditOpen = null;
+          showClockEdit(reopenType, reopenIdx);
         } else if (field === 'nap-start') {
           const i = parseInt(inp.dataset.idx);
           mb.napTimes[i].start = inp.value;
           saveMB();
           recalcFromNap(i);
-          return;
+          // Re-open if nap still exists
+          clockEditOpen = null;
+          if (mb.napTimes[i]) showClockEdit('nap', i);
         } else if (field === 'nap-end') {
           const i = parseInt(inp.dataset.idx);
           mb.napTimes[i].end = inp.value;
           saveMB();
           recalcFromNap(i);
-          return;
+          clockEditOpen = null;
+          if (mb.napTimes[i]) showClockEdit('nap', i);
         }
-        saveMB();
-        renderNapInputs();
-        renderResults();
       });
     });
 
     // Close when tapping outside
     setTimeout(() => {
       document.addEventListener('click', function handler(e) {
-        if (!popup.contains(e.target) && !e.target.closest('.clock-arc')) {
+        const popupEl = $('mb-clock-popup').querySelector('.clock-edit-popup');
+        if (popupEl && !popupEl.contains(e.target) && !e.target.closest('.clock-arc')) {
           closeClockEdit();
           document.removeEventListener('click', handler);
         }
       });
-    }, 100);
+    }, 200);
   }
 
   function renderClock(bedMin, wakeMin, naps, totalH, nightH, napH) {
@@ -701,16 +737,50 @@
     const actualNapH = actualNapMins / 60;
     const actualTotalH = actualNightH + actualNapH;
 
+    // Validation: check for overlapping naps and >24h
+    const warnings = [];
+    for (let i = 1; i < sortedNaps.length; i++) {
+      const prevEnd = t2m(sortedNaps[i - 1].end);
+      const thisStart = t2m(sortedNaps[i].start);
+      let gap = thisStart - prevEnd;
+      if (gap < 0) gap += 1440;
+      if (gap > 720) {
+        warnings.push(`Nap ${i} and Nap ${i + 1} overlap — check your times.`);
+      }
+    }
+    // Check naps don't overlap with night sleep
+    sortedNaps.forEach((n, i) => {
+      const ns = t2m(n.start), ne = t2m(n.end);
+      const dur = napDuration(n);
+      // Nap during night sleep?
+      let napInNight = false;
+      if (actualNight >= 720) {
+        // Night wraps midnight
+        if (ns >= bedMin || ns < wakeMin) napInNight = true;
+      }
+      if (napInNight) {
+        warnings.push(`Nap ${i + 1} overlaps with night sleep — check your times.`);
+      }
+      if (dur > 240) {
+        warnings.push(`Nap ${i + 1} is ${durLabel(dur)} — that seems very long. Check the start and end times.`);
+      }
+    });
+    if (actualTotalH > 22) {
+      warnings.push(`Total sleep is ${actualTotalH.toFixed(1)} hours — this exceeds a full day. Check your bedtime, wake time, and nap times.`);
+    }
+
     // Wake windows
     const wws = [];
     let prev = wakeMin;
     sortedNaps.forEach((n, i) => {
       const s = t2m(n.start);
       let gap = s - prev; if (gap < 0) gap += 1440;
+      if (gap > 720) gap = 1440 - gap; // Fix negative/wrapped wake windows
       wws.push({ label: i === 0 ? 'Wake to Nap 1' : 'Nap ' + i + ' to Nap ' + (i + 1), mins: gap });
       prev = t2m(n.end);
     });
     let lastGap = bedMin - prev; if (lastGap < 0) lastGap += 1440;
+    if (lastGap > 720) lastGap = 1440 - lastGap;
     wws.push({ label: mb.napCount > 0 ? 'Last nap to Bedtime' : 'Wake to Bedtime', mins: lastGap });
 
     // Recommended values
@@ -725,8 +795,22 @@
     // --- Circular Clock ---
     renderClock(bedMin, wakeMin, sortedNaps, actualTotalH, actualNightH, actualNapH);
 
+    // --- Validation warnings ---
+    let cHtml = '';
+    if (warnings.length > 0) {
+      warnings.forEach(w => {
+        cHtml += `<div class="check-card warn">
+          <div class="check-icon">⚠️</div>
+          <div class="check-content">
+            <div class="check-title">Check your schedule</div>
+            <div class="check-detail">${w}</div>
+          </div>
+        </div>`;
+      });
+    }
+
     // --- Comparison cards ---
-    let cHtml = '<div class="checks-section">';
+    cHtml += '<div class="checks-section">';
 
     // Compare helper
     function cmp(title, actual, unit, recMin, recMax, lowTip, highTip) {
@@ -927,6 +1011,7 @@
 
   // Event listeners
   function onBirthdayChange() {
+    closeClockEdit(); // Bug #4: close popup on birthday change
     const val = $('mb-birthday').value;
     mb.birthday = val;
     saveMB();
@@ -976,6 +1061,8 @@
   });
 
   $('mb-nap-minus').addEventListener('click', () => {
+    if (!mb.birthday) return;
+    closeClockEdit();
     if (mb.napCount > 0) {
       mb.napCount--;
       $('mb-nap-count').textContent = mb.napCount;
@@ -988,10 +1075,12 @@
   });
 
   $('mb-nap-plus').addEventListener('click', () => {
-    if (mb.napCount < 8) {
+    if (!mb.birthday) return;
+    closeClockEdit();
+    const age = ageRangeFor(getAgeMonths(mb.birthday));
+    if (mb.napCount < age.naps.max) {
       mb.napCount++;
       $('mb-nap-count').textContent = mb.napCount;
-      const age = ageRangeFor(getAgeMonths(mb.birthday));
       mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
       saveMB();
       renderNapInputs();
