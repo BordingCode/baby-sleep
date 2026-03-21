@@ -287,218 +287,204 @@
   }
 
   // --- My Baby Planner ---
-  function getAgeInMonths(birthday) {
+  let mb = { birthday: '', bedtime: '19:00', waketime: '07:00', napCount: 2, napTimes: [] };
+
+  function getAgeMonths(birthday) {
     const today = new Date();
-    const birth = new Date(birthday);
-    const months = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
-    const dayDiff = today.getDate() - birth.getDate();
-    return dayDiff < 0 ? Math.max(months - 1, 0) : months;
+    const b = new Date(birthday + 'T00:00:00');
+    const m = (today.getFullYear() - b.getFullYear()) * 12 + (today.getMonth() - b.getMonth());
+    return today.getDate() < b.getDate() ? Math.max(m - 1, 0) : m;
   }
 
-  function getAgeInWeeks(birthday) {
-    const today = new Date();
-    const birth = new Date(birthday);
-    return Math.floor((today - birth) / (7 * 24 * 60 * 60 * 1000));
+  function getAgeWeeks(birthday) {
+    return Math.floor((new Date() - new Date(birthday + 'T00:00:00')) / 604800000);
   }
 
-  function getAgeLabelFromBirthday(birthday) {
-    const months = getAgeInMonths(birthday);
-    const weeks = getAgeInWeeks(birthday);
-    if (months < 1) return weeks + (weeks === 1 ? ' week' : ' weeks') + ' old';
-    if (months < 24) return months + (months === 1 ? ' month' : ' months') + ' old';
-    const years = Math.floor(months / 12);
-    const rem = months % 12;
-    if (rem === 0) return years + (years === 1 ? ' year' : ' years') + ' old';
-    return years + 'y ' + rem + 'm old';
+  function ageLabel(birthday) {
+    const m = getAgeMonths(birthday);
+    const w = getAgeWeeks(birthday);
+    if (m < 1) return w + (w === 1 ? ' week' : ' weeks') + ' old';
+    if (m < 24) return m + (m === 1 ? ' month' : ' months') + ' old';
+    const y = Math.floor(m / 12), r = m % 12;
+    return r === 0 ? y + ' years old' : y + 'y ' + r + 'm old';
   }
 
-  function findAgeRangeForMonths(months) {
-    for (let i = data.ageRanges.length - 1; i >= 0; i--) {
+  function ageRangeFor(months) {
+    for (let i = data.ageRanges.length - 1; i >= 0; i--)
       if (months >= data.ageRanges[i].minMonths) return data.ageRanges[i];
-    }
     return data.ageRanges[0];
   }
 
-  function minToLabel(m) {
+  function t2m(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+
+  function m2t(m) {
     m = ((m % 1440) + 1440) % 1440;
-    const h = Math.floor(m / 60);
-    const min = m % 60;
-    return (h < 10 ? '0' : '') + h + ':' + (min < 10 ? '0' : '') + min;
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   }
 
-  function durationLabel(mins) {
+  function durLabel(mins) {
     if (mins < 0) mins += 1440;
-    const h = Math.floor(mins / 60);
-    const m = Math.round(mins % 60);
+    const h = Math.floor(mins / 60), m = Math.round(mins % 60);
     if (h === 0) return m + ' min';
-    if (m === 0) return h + 'h';
-    return h + 'h ' + m + 'm';
+    return m === 0 ? h + 'h' : h + 'h ' + m + 'm';
   }
 
-  // Standard bedtimes by age (science-based recommendations)
-  function getStandardBedtime(months) {
-    if (months <= 2) return 22 * 60;       // 22:00 — newborns have late bedtimes
-    if (months <= 3) return 20 * 60 + 30;  // 20:30
-    if (months <= 5) return 19 * 60 + 30;  // 19:30
-    if (months <= 12) return 19 * 60;      // 19:00
-    if (months <= 24) return 19 * 60 + 30; // 19:30
-    return 20 * 60;                        // 20:00 for 2-3yr
+  // Recommended bedtimes by age (science-based)
+  function recBedtime(months) {
+    if (months <= 2) return 22 * 60;
+    if (months <= 3) return 20 * 60 + 30;
+    if (months <= 5) return 19 * 60 + 30;
+    if (months <= 12) return 19 * 60;
+    if (months <= 24) return 19 * 60 + 30;
+    return 20 * 60;
   }
 
-  function getStandardWakeTime(months) {
-    if (months <= 2) return 7 * 60 + 30;   // 07:30
-    return 7 * 60;                         // 07:00
+  function recWakeTime(months) {
+    return months <= 2 ? 7 * 60 + 30 : 7 * 60;
   }
 
-  function buildSchedule(age, months) {
-    const wakeMin = getStandardWakeTime(months);
-    const bedMin = getStandardBedtime(months);
-    const wwAvg = (age.wakeWindow.min + age.wakeWindow.max) / 2;
-    const recNaps = Math.round((age.naps.min + age.naps.max) / 2);
-    const totalNapHrs = (age.napSleepHours.min + age.napSleepHours.max) / 2;
-    const napDurMin = recNaps > 0 ? Math.round((totalNapHrs * 60) / recNaps) : 0;
+  function saveMB() { localStorage.setItem('bs_mybaby', JSON.stringify(mb)); }
 
-    const items = [];
-    items.push({ icon: '🌅', label: 'Wake up', time: wakeMin });
+  function loadMB() {
+    try {
+      const s = localStorage.getItem('bs_mybaby');
+      if (s) mb = { ...mb, ...JSON.parse(s) };
+    } catch(e) {}
+  }
 
-    let t = wakeMin;
+  function initMyBaby() {
+    loadMB();
+    if (mb.birthday) $('mb-birthday').value = mb.birthday;
+    if (mb.birthday) {
+      showRoutineInputs();
+    }
+  }
+
+  function showRoutineInputs() {
+    const months = getAgeMonths(mb.birthday);
+    const age = ageRangeFor(months);
+
+    // Set defaults from science if first time
+    if (!localStorage.getItem('bs_mybaby')) {
+      mb.bedtime = m2t(recBedtime(months));
+      mb.waketime = m2t(recWakeTime(months));
+      mb.napCount = Math.round((age.naps.min + age.naps.max) / 2);
+      mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
+    }
+
+    $('mb-bedtime').value = mb.bedtime;
+    $('mb-waketime').value = mb.waketime;
+    $('mb-nap-count').textContent = mb.napCount;
+    $('mb-routine-section').style.display = '';
+    renderNapInputs();
+    renderResults();
+  }
+
+  function buildDefaultNaps(age, count, wakeMin) {
+    const ww = (age.wakeWindow.min + age.wakeWindow.max) / 2;
+    const totalNapH = (age.napSleepHours.min + age.napSleepHours.max) / 2;
+    const dur = count > 0 ? Math.round(totalNapH * 60 / count) : 0;
     const naps = [];
-    for (let i = 0; i < recNaps; i++) {
-      t += wwAvg;
-      const napStart = Math.round(t);
-      const napEnd = napStart + napDurMin;
-      items.push({ icon: '😴', label: 'Nap ' + (i + 1), time: napStart, endTime: napEnd, duration: napDurMin });
-      naps.push({ start: napStart, end: napEnd, duration: napDurMin });
-      t = napEnd;
+    let t = wakeMin;
+    for (let i = 0; i < count; i++) {
+      t += ww;
+      naps.push({ start: m2t(Math.round(t)), duration: Math.min(Math.max(dur, 30), 150) });
+      t += dur;
     }
-
-    items.push({ icon: '🌙', label: 'Bedtime', time: bedMin });
-
-    // Night sleep
-    let nightSleep = wakeMin - bedMin;
-    if (nightSleep <= 0) nightSleep += 1440;
-
-    return { items, naps, wakeMin, bedMin, nightSleep, recNaps, napDurMin, totalNapMins: recNaps * napDurMin, wwAvg };
+    return naps;
   }
 
-  function restoreMyBaby() {
-    const saved = localStorage.getItem('bs_birthday');
-    if (saved) {
-      $('mb-birthday').value = saved;
-      renderMyBaby();
-    }
-  }
+  function renderNapInputs() {
+    const el = $('mb-nap-times');
+    if (mb.napCount === 0) { el.innerHTML = ''; return; }
 
-  $('mb-birthday').addEventListener('change', function() {
-    localStorage.setItem('bs_birthday', this.value);
-    renderMyBaby();
-  });
-
-  function renderMyBaby() {
-    const birthday = $('mb-birthday').value;
-    if (!birthday) {
-      $('mb-age-display').innerHTML = '';
-      $('mb-schedule').innerHTML = '';
-      $('mb-timeline').innerHTML = '';
-      $('mb-notes').innerHTML = '';
-      return;
+    const months = getAgeMonths(mb.birthday);
+    const age = ageRangeFor(months);
+    if (mb.napTimes.length !== mb.napCount) {
+      mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
+      saveMB();
     }
 
-    const months = getAgeInMonths(birthday);
-    const ageLabel = getAgeLabelFromBirthday(birthday);
-    const age = findAgeRangeForMonths(months);
-
-    if (months > 42) {
-      $('mb-age-display').innerHTML = `<div class="check-card info">
-        <div class="check-icon">👋</div>
-        <div class="check-content">
-          <div class="check-title">${ageLabel}</div>
-          <div class="check-detail">This app covers sleep from birth to 3 years. Your child is beyond this range — they likely have a settled sleep pattern by now!</div>
+    let html = '<div class="nap-times"><div class="nap-times-title">😴 Nap Times</div>';
+    for (let i = 0; i < mb.napCount; i++) {
+      const n = mb.napTimes[i];
+      html += `<div class="nap-time-row">
+        <div class="nap-time-label">Nap ${i + 1}</div>
+        <div class="nap-time-inputs">
+          <input type="time" value="${n.start}" data-nap="${i}">
+          <span>${durLabel(n.duration)}</span>
         </div>
       </div>`;
-      $('mb-schedule').innerHTML = '';
-      $('mb-timeline').innerHTML = '';
-      $('mb-notes').innerHTML = '';
-      return;
     }
+    html += '</div>';
+    el.innerHTML = html;
 
-    // Age display
-    $('mb-age-display').innerHTML = `<div class="check-card info">
-      <div class="check-icon">👶</div>
-      <div class="check-content">
-        <div class="check-title">${ageLabel}</div>
-        <div class="check-detail">Sleep recommendations for: ${age.ageLabel}</div>
-      </div>
-    </div>`;
-
-    const sched = buildSchedule(age, months);
-
-    // Schedule card
-    let html = '<div class="suggested-section"><div class="suggested-title">Recommended Daily Schedule</div>';
-    sched.items.forEach(item => {
-      if (item.endTime !== undefined) {
-        html += `<div class="suggested-item">
-          <span class="suggested-item-label">${item.icon} ${item.label}</span>
-          <span class="suggested-item-value">${minToLabel(item.time)} – ${minToLabel(item.endTime)} <small style="color:var(--text-muted)">(${durationLabel(item.duration)})</small></span>
-        </div>`;
-      } else {
-        html += `<div class="suggested-item">
-          <span class="suggested-item-label">${item.icon} ${item.label}</span>
-          <span class="suggested-item-value">${minToLabel(item.time)}</span>
-        </div>`;
-      }
+    el.querySelectorAll('input[type="time"]').forEach(inp => {
+      inp.addEventListener('change', () => {
+        mb.napTimes[parseInt(inp.dataset.nap)].start = inp.value;
+        saveMB();
+        renderResults();
+      });
     });
-    html += '</div>';
+  }
 
-    // Summary stats
-    html += '<div class="suggested-section">';
-    html += `<div class="suggested-item">
-      <span class="suggested-item-label">🌙 Night sleep</span>
-      <span class="suggested-item-value">${(sched.nightSleep / 60).toFixed(1)} hours</span>
-    </div>`;
-    html += `<div class="suggested-item">
-      <span class="suggested-item-label">☀️ Nap sleep</span>
-      <span class="suggested-item-value">${(sched.totalNapMins / 60).toFixed(1)} hours (${sched.recNaps} ${sched.recNaps === 1 ? 'nap' : 'naps'})</span>
-    </div>`;
-    html += `<div class="suggested-item">
-      <span class="suggested-item-label">⏰ Wake window</span>
-      <span class="suggested-item-value">${formatWakeWindow(age.wakeWindow)}</span>
-    </div>`;
-    const totalHrs = sched.nightSleep / 60 + sched.totalNapMins / 60;
-    html += `<div class="suggested-item">
-      <span class="suggested-item-label"><strong>Total sleep</strong></span>
-      <span class="suggested-item-value"><strong>${totalHrs.toFixed(1)} hours</strong></span>
-    </div>`;
-    if (age.feedingsPerNight !== '0') {
-      html += `<div class="suggested-item">
-        <span class="suggested-item-label">🍼 Night feedings</span>
-        <span class="suggested-item-value">${age.feedingsPerNight}</span>
-      </div>`;
-    }
-    html += '</div>';
+  function renderResults() {
+    if (!mb.birthday) return;
+    const months = getAgeMonths(mb.birthday);
+    const age = ageRangeFor(months);
 
-    $('mb-schedule').innerHTML = html;
+    const bedMin = t2m(mb.bedtime);
+    const wakeMin = t2m(mb.waketime);
 
-    // Timeline
+    // Actual values
+    let actualNight = wakeMin - bedMin;
+    if (actualNight <= 0) actualNight += 1440;
+    const actualNightH = actualNight / 60;
+
+    let actualNapMins = 0;
+    const sortedNaps = (mb.napTimes || []).slice().sort((a, b) => t2m(a.start) - t2m(b.start));
+    sortedNaps.forEach(n => { actualNapMins += n.duration; });
+    const actualNapH = actualNapMins / 60;
+    const actualTotalH = actualNightH + actualNapH;
+
+    // Wake windows
+    const wws = [];
+    let prev = wakeMin;
+    sortedNaps.forEach((n, i) => {
+      const s = t2m(n.start);
+      let gap = s - prev; if (gap < 0) gap += 1440;
+      wws.push({ label: i === 0 ? 'Wake to Nap 1' : 'Nap ' + i + ' to Nap ' + (i + 1), mins: gap });
+      prev = s + n.duration;
+    });
+    let lastGap = bedMin - prev; if (lastGap < 0) lastGap += 1440;
+    wws.push({ label: mb.napCount > 0 ? 'Last nap to Bedtime' : 'Wake to Bedtime', mins: lastGap });
+
+    // Recommended values
+    const recBed = recBedtime(months);
+    const recWake = recWakeTime(months);
+    const recNapCount = Math.round((age.naps.min + age.naps.max) / 2);
+    const recNapH = (age.napSleepHours.min + age.napSleepHours.max) / 2;
+    let recNightMins = recWake - recBed; if (recNightMins <= 0) recNightMins += 1440;
+    const recNightH = recNightMins / 60;
+    const recTotalH = (age.totalSleepHours.min + age.totalSleepHours.max) / 2;
+
+    // --- Timeline ---
     const blocks = [];
-    blocks.push({ type: 'night', start: sched.bedMin, duration: sched.nightSleep, label: 'Night' });
-    sched.naps.forEach((nap, i) => {
-      blocks.push({ type: 'nap', start: nap.start, duration: nap.duration, label: 'Nap ' + (i + 1) });
+    blocks.push({ type: 'night', start: bedMin, duration: actualNight, label: 'Night' });
+    sortedNaps.forEach((n, i) => {
+      blocks.push({ type: 'nap', start: t2m(n.start), duration: n.duration, label: 'Nap ' + (i + 1) });
     });
 
-    const totalMins = 1440;
-    let tlHtml = '<div class="timeline-section"><div class="timeline-title">Visual Timeline</div>';
+    let tlHtml = '<div class="timeline-section"><div class="timeline-title">Your Baby\'s Day</div>';
     tlHtml += '<div class="timeline-bar">';
     blocks.forEach(b => {
-      let offset = b.start - sched.bedMin;
-      if (offset < 0) offset += totalMins;
-      const left = (offset / totalMins) * 100;
-      const width = Math.max((b.duration / totalMins) * 100, 0.5);
-      const label = b.duration >= 60 ? b.label : '';
-      tlHtml += `<div class="timeline-block ${b.type}" style="left:${left}%;width:${width}%">${label}</div>`;
+      let off = b.start - bedMin; if (off < 0) off += 1440;
+      const left = (off / 1440) * 100;
+      const w = Math.max((b.duration / 1440) * 100, 0.5);
+      tlHtml += `<div class="timeline-block ${b.type}" style="left:${left}%;width:${w}%">${b.duration >= 60 ? b.label : ''}</div>`;
     });
     tlHtml += '</div>';
-    tlHtml += `<div class="timeline-labels"><span>${minToLabel(sched.bedMin)}</span><span>${minToLabel(sched.bedMin + 720)}</span><span>${minToLabel(sched.bedMin)}</span></div>`;
+    tlHtml += `<div class="timeline-labels"><span>${m2t(bedMin)}</span><span>${m2t(bedMin + 720)}</span><span>${m2t(bedMin)}</span></div>`;
     tlHtml += '<div class="timeline-legend">';
     tlHtml += '<span><span class="legend-dot" style="background:var(--sleep-night)"></span>Night</span>';
     tlHtml += '<span><span class="legend-dot" style="background:var(--sleep-nap)"></span>Naps</span>';
@@ -506,23 +492,187 @@
     tlHtml += '</div></div>';
     $('mb-timeline').innerHTML = tlHtml;
 
-    // Notes
-    let notesHtml = '';
+    // --- Comparison cards ---
+    let cHtml = '<div class="checks-section">';
 
-    // Regression check
+    // Compare helper
+    function cmp(title, actual, unit, recMin, recMax, lowTip, highTip) {
+      const ok = actual >= recMin - 0.3 && actual <= recMax + 0.3;
+      const low = actual < recMin - 0.3;
+      const val = typeof actual === 'number' ? actual.toFixed(1) : actual;
+      cHtml += `<div class="check-card ${ok ? 'good' : 'warn'}">
+        <div class="check-icon">${ok ? '✅' : '⚠️'}</div>
+        <div class="check-content">
+          <div class="check-title">${title}: ${val} ${unit}</div>
+          <div class="check-detail">Recommended: ${recMin}–${recMax} ${unit}. ${ok ? 'On track!' : low ? lowTip : highTip}</div>
+        </div>
+      </div>`;
+    }
+
+    cmp('Night sleep', actualNightH, 'hours',
+      age.nightSleepHours.min, age.nightSleepHours.max,
+      'Try an earlier bedtime — even 15–30 minutes can make a big difference.',
+      'Night is a bit long. A slightly later bedtime might help consolidate sleep.'
+    );
+
+    if (age.napSleepHours.max > 0) {
+      cmp('Daytime nap sleep', actualNapH, 'hours',
+        age.napSleepHours.min, age.napSleepHours.max,
+        'Naps are short. Try a darker room, white noise, and check wake windows.',
+        'Too much daytime sleep can cause night waking or a late bedtime. Try shortening or dropping a nap.'
+      );
+    }
+
+    cmp('Total sleep', actualTotalH, 'hours',
+      age.totalSleepHours.min, age.totalSleepHours.max,
+      'Total sleep is low. Consider an earlier bedtime or longer naps.',
+      'Above average — fine if baby seems happy, but could cause bedtime resistance.'
+    );
+
+    // Nap count
+    const napOk = mb.napCount >= age.naps.min && mb.napCount <= age.naps.max;
+    cHtml += `<div class="check-card ${napOk ? 'good' : 'warn'}">
+      <div class="check-icon">${napOk ? '✅' : '⚠️'}</div>
+      <div class="check-content">
+        <div class="check-title">Naps: ${mb.napCount}</div>
+        <div class="check-detail">Recommended: ${age.naps.label}. ${napOk ? 'Right on track!' :
+          mb.napCount < age.naps.min ? 'Your baby may need more naps — watch for overtiredness signs (fussiness, yawning).' :
+          'Your baby might be ready to drop a nap. Signs: fighting a nap for 2+ weeks, or last nap pushes bedtime too late.'}</div>
+      </div>
+    </div>`;
+
+    // Wake windows
+    wws.forEach(ww => {
+      const ok = ww.mins >= age.wakeWindow.min - 15 && ww.mins <= age.wakeWindow.max + 15;
+      const short = ww.mins < age.wakeWindow.min - 15;
+      cHtml += `<div class="check-card ${ok ? 'good' : 'warn'}">
+        <div class="check-icon">${ok ? '✅' : '⚠️'}</div>
+        <div class="check-content">
+          <div class="check-title">${ww.label}: ${durLabel(ww.mins)}</div>
+          <div class="check-detail">Recommended: ${formatWakeWindow(age.wakeWindow)}. ${ok ? 'Good spacing!' :
+            short ? 'Too short — baby may not be tired enough. Try stretching by 10–15 min.' :
+            'Too long — baby is likely overtired. Try putting down 15–30 min earlier.'}</div>
+        </div>
+      </div>`;
+    });
+
+    cHtml += '</div>';
+    $('mb-comparison').innerHTML = cHtml;
+
+    // --- Advice section ---
+    let advHtml = '';
+    const tips = [];
+
+    // Bedtime advice
+    const bedDiff = bedMin - recBed;
+    if (Math.abs(bedDiff) > 30) {
+      const dir = bedDiff > 0 ? 'late' : 'early';
+      const target = m2t(recBed);
+      tips.push({
+        icon: '🌙',
+        title: 'Adjust bedtime',
+        text: `Your bedtime (${m2t(bedMin)}) is ${durLabel(Math.abs(bedDiff))} ${dir}er than recommended (${target}). ${
+          dir === 'late' ? 'An earlier bedtime often improves night sleep and reduces early morning waking. Shift by 15 min every 2–3 days.' :
+          'A slightly later bedtime may help if baby fights falling asleep or takes a long time to settle.'
+        }`
+      });
+    }
+
+    // Wake time advice
+    const wakeDiff = wakeMin - recWake;
+    if (Math.abs(wakeDiff) > 30) {
+      tips.push({
+        icon: '🌅',
+        title: 'Adjust wake time',
+        text: `Your wake time (${m2t(wakeMin)}) is ${durLabel(Math.abs(wakeDiff))} ${wakeDiff > 0 ? 'later' : 'earlier'} than the typical ${m2t(recWake)}. ${
+          wakeDiff < 0 ? 'Early waking is common — ensure the room is very dark, and try not starting the day before 06:00.' :
+          'A late wake time pushes the whole day later. Try gradually waking baby 15 min earlier.'
+        }`
+      });
+    }
+
+    // Nap count advice
+    if (!napOk) {
+      tips.push({
+        icon: '😴',
+        title: mb.napCount < age.naps.min ? 'Add a nap' : 'Drop a nap',
+        text: mb.napCount < age.naps.min ?
+          `At ${ageLabel(mb.birthday)}, most babies need ${age.naps.label} naps. An extra short nap (even 20–30 min) in the late afternoon can prevent overtiredness at bedtime.` :
+          `At ${ageLabel(mb.birthday)}, most babies do well with ${age.naps.label} naps. If baby fights a nap consistently for 2+ weeks, it\'s time to drop it. Move bedtime earlier during the transition.`
+      });
+    }
+
+    // Wake window advice
+    wws.forEach(ww => {
+      if (ww.mins < age.wakeWindow.min - 20) {
+        tips.push({
+          icon: '⏰',
+          title: ww.label + ' is too short',
+          text: `${durLabel(ww.mins)} awake is below the recommended ${formatWakeWindow(age.wakeWindow)}. Baby may not be tired enough to sleep well. Try adding 10–15 minutes of play or tummy time.`
+        });
+      } else if (ww.mins > age.wakeWindow.max + 20) {
+        tips.push({
+          icon: '⏰',
+          title: ww.label + ' is too long',
+          text: `${durLabel(ww.mins)} awake is above the recommended ${formatWakeWindow(age.wakeWindow)}. An overtired baby often fights sleep harder. Try putting baby down 15–30 min earlier.`
+        });
+      }
+    });
+
+    // Regression warning
     const regression = findRegression(age);
     if (regression) {
-      notesHtml += `<div class="check-card warn">
-        <div class="check-icon">⚠️</div>
+      tips.push({
+        icon: '🔄',
+        title: regression.label,
+        text: regression.description + ' This typically lasts ' + regression.duration + '. Stay consistent with your routine — it will pass.'
+      });
+    }
+
+    // Build suggested optimal schedule
+    const optWake = recWake;
+    const optBed = recBed;
+    const optWW = (age.wakeWindow.min + age.wakeWindow.max) / 2;
+    const optNapDur = recNapCount > 0 ? Math.round(recNapH * 60 / recNapCount) : 0;
+
+    let sugHtml = '<div class="suggested-section"><div class="suggested-title">Optimal Schedule for ' + ageLabel(mb.birthday) + '</div>';
+    sugHtml += `<div class="suggested-item"><span class="suggested-item-label">🌅 Wake up</span><span class="suggested-item-value">${m2t(optWake)}</span></div>`;
+
+    let ot = optWake;
+    for (let i = 0; i < recNapCount; i++) {
+      ot += optWW;
+      const ns = Math.round(ot), ne = ns + optNapDur;
+      sugHtml += `<div class="suggested-item"><span class="suggested-item-label">😴 Nap ${i + 1}</span><span class="suggested-item-value">${m2t(ns)} – ${m2t(ne)} (${durLabel(optNapDur)})</span></div>`;
+      ot = ne;
+    }
+    sugHtml += `<div class="suggested-item"><span class="suggested-item-label">🌙 Bedtime</span><span class="suggested-item-value">${m2t(optBed)}</span></div>`;
+    sugHtml += '</div>';
+
+    // Advice cards
+    if (tips.length > 0) {
+      advHtml += '<div class="suggested-section"><div class="suggested-title">How to Optimize</div>';
+      tips.forEach(tip => {
+        advHtml += `<div class="check-card warn" style="border-left-color:var(--primary)">
+          <div class="check-icon">${tip.icon}</div>
+          <div class="check-content">
+            <div class="check-title">${tip.title}</div>
+            <div class="check-detail">${tip.text}</div>
+          </div>
+        </div>`;
+      });
+      advHtml += '</div>';
+    } else {
+      advHtml += `<div class="check-card good">
+        <div class="check-icon">🌟</div>
         <div class="check-content">
-          <div class="check-title">${regression.label}</div>
-          <div class="check-detail">${regression.description} Duration: ${regression.duration}.</div>
+          <div class="check-title">Looking great!</div>
+          <div class="check-detail">Your baby's routine aligns well with the science-based recommendations for their age. Keep up the consistency!</div>
         </div>
       </div>`;
     }
 
     // Age note
-    notesHtml += `<div class="check-card info">
+    advHtml += `<div class="check-card info">
       <div class="check-icon">💡</div>
       <div class="check-content">
         <div class="check-title">What to know at this age</div>
@@ -530,15 +680,88 @@
       </div>
     </div>`;
 
-    $('mb-notes').innerHTML = notesHtml;
+    advHtml += sugHtml;
+
+    $('mb-advice').innerHTML = advHtml;
   }
+
+  // Event listeners
+  $('mb-birthday').addEventListener('input', function() {
+    mb.birthday = this.value;
+    saveMB();
+    if (this.value) {
+      const months = getAgeMonths(this.value);
+      const age = ageRangeFor(months);
+
+      $('mb-age-badge').innerHTML = `<div class="check-card info">
+        <div class="check-icon">👶</div>
+        <div class="check-content">
+          <div class="check-title">${ageLabel(this.value)}</div>
+          <div class="check-detail">Sleep recommendations for: ${age.ageLabel}</div>
+        </div>
+      </div>`;
+
+      // Set smart defaults from science
+      mb.bedtime = m2t(recBedtime(months));
+      mb.waketime = m2t(recWakeTime(months));
+      mb.napCount = Math.round((age.naps.min + age.naps.max) / 2);
+      mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
+      saveMB();
+      showRoutineInputs();
+    } else {
+      $('mb-age-badge').innerHTML = '';
+      $('mb-routine-section').style.display = 'none';
+      $('mb-timeline').innerHTML = '';
+      $('mb-comparison').innerHTML = '';
+      $('mb-advice').innerHTML = '';
+    }
+  });
+
+  $('mb-bedtime').addEventListener('change', function() {
+    mb.bedtime = this.value;
+    saveMB();
+    renderResults();
+  });
+
+  $('mb-waketime').addEventListener('change', function() {
+    mb.waketime = this.value;
+    const age = ageRangeFor(getAgeMonths(mb.birthday));
+    mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
+    saveMB();
+    renderNapInputs();
+    renderResults();
+  });
+
+  $('mb-nap-minus').addEventListener('click', () => {
+    if (mb.napCount > 0) {
+      mb.napCount--;
+      $('mb-nap-count').textContent = mb.napCount;
+      const age = ageRangeFor(getAgeMonths(mb.birthday));
+      mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
+      saveMB();
+      renderNapInputs();
+      renderResults();
+    }
+  });
+
+  $('mb-nap-plus').addEventListener('click', () => {
+    if (mb.napCount < 8) {
+      mb.napCount++;
+      $('mb-nap-count').textContent = mb.napCount;
+      const age = ageRangeFor(getAgeMonths(mb.birthday));
+      mb.napTimes = buildDefaultNaps(age, mb.napCount, t2m(mb.waketime));
+      saveMB();
+      renderNapInputs();
+      renderResults();
+    }
+  });
 
   // --- Init ---
   restoreAge();
   renderTips();
   renderEnvironment();
   updateRoutine();
-  restoreMyBaby();
+  initMyBaby();
 
   // Register service worker
   if ('serviceWorker' in navigator) {
