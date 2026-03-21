@@ -131,42 +131,27 @@
   <div id="screen-mybaby" class="screen">
     <div class="container">
       <div class="screen-title">👶 My Baby's Plan</div>
-      <div class="planner-intro">Enter your baby's sleep times to get a personalized plan based on the science for their age.</div>
 
       <div class="planner-form">
         <div class="planner-row">
-          <div class="planner-label"><span class="planner-label-icon">🌙</span> Bedtime</div>
+          <div class="planner-label"><span class="planner-label-icon">🎂</span> Birthday</div>
           <div class="planner-input">
-            <input type="time" id="mb-bedtime" value="19:00">
-          </div>
-        </div>
-        <div class="planner-row">
-          <div class="planner-label"><span class="planner-label-icon">🌅</span> Wake up</div>
-          <div class="planner-input">
-            <input type="time" id="mb-waketime" value="07:00">
-          </div>
-        </div>
-        <div class="planner-row">
-          <div class="planner-label"><span class="planner-label-icon">😴</span> Naps</div>
-          <div class="nap-stepper">
-            <button class="nap-stepper-btn" id="mb-nap-minus">−</button>
-            <div class="nap-stepper-value" id="mb-nap-count">2</div>
-            <button class="nap-stepper-btn" id="mb-nap-plus">+</button>
+            <input type="date" id="mb-birthday">
           </div>
         </div>
       </div>
 
-      <div id="mb-nap-times"></div>
+      <div id="mb-age-display"></div>
+
+      <div id="mb-schedule"></div>
 
       <div id="mb-timeline"></div>
 
-      <div id="mb-checks"></div>
-
-      <div id="mb-suggested"></div>
+      <div id="mb-notes"></div>
 
       <div class="disclaimer">
-        This plan is personalized guidance based on your inputs and pediatric sleep science.<br>
-        Every baby is unique — adjust as needed.
+        Personalized schedule based on pediatric sleep science (AAP, National Sleep Foundation).<br>
+        Every baby is unique — consult your pediatrician for specific concerns.
       </div>
     </div>
   </div>
