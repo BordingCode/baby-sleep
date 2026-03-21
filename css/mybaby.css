@@ -179,24 +179,26 @@
 }
 
 /* Tap-to-edit popup */
+#mb-clock-popup {
+  position: relative;
+  z-index: 50;
+}
+
 .clock-edit-popup {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
   background: var(--surface);
   border-radius: var(--radius);
   padding: 16px 20px;
   box-shadow: 0 8px 32px rgba(45, 43, 61, 0.25);
-  z-index: 50;
   opacity: 0;
+  transform: translateY(-8px);
   transition: opacity 0.2s, transform 0.2s;
-  min-width: 200px;
+  margin: 8px auto 12px;
+  max-width: 260px;
 }
 
 .clock-edit-popup.visible {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+  transform: translateY(0);
 }
 
 .clock-edit-title {

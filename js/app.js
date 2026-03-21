@@ -519,13 +519,22 @@
     return `M${os.x} ${os.y} A${CLK.R} ${CLK.R} 0 ${sw} 1 ${oe.x} ${oe.y} L${is_.x} ${is_.y} A${CLK.r} ${CLK.r} 0 ${sw} 0 ${ie.x} ${ie.y}Z`;
   }
 
+  let clockEditOpen = null; // { type, idx } or null
+
   function closeClockEdit() {
-    const existing = document.querySelector('.clock-edit-popup');
-    if (existing) existing.remove();
+    $('mb-clock-popup').innerHTML = '';
+    clockEditOpen = null;
   }
 
   function showClockEdit(type, idx) {
-    closeClockEdit();
+    // If same popup is already open, close it
+    if (clockEditOpen && clockEditOpen.type === type && clockEditOpen.idx === idx) {
+      closeClockEdit();
+      return;
+    }
+
+    clockEditOpen = { type, idx };
+    const container = $('mb-clock-popup');
     const popup = document.createElement('div');
     popup.className = 'clock-edit-popup';
 
@@ -542,6 +551,7 @@
         </div>`;
     } else {
       const nap = mb.napTimes[idx];
+      if (!nap) { closeClockEdit(); return; }
       popup.innerHTML = `
         <div class="clock-edit-title">😴 Nap ${idx + 1}</div>
         <div class="clock-edit-row">
@@ -554,9 +564,8 @@
         </div>`;
     }
 
-    $('mb-clock').appendChild(popup);
-
-    // Animate in
+    container.innerHTML = '';
+    container.appendChild(popup);
     requestAnimationFrame(() => popup.classList.add('visible'));
 
     popup.querySelectorAll('input').forEach(inp => {
