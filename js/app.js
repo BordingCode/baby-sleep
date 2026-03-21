@@ -288,6 +288,7 @@
 
   // --- My Baby Planner ---
   let mb = { birthday: '', bedtime: '19:00', waketime: '07:00', napCount: 2, napTimes: [] };
+  let clockDrag = null;
 
   function getAgeMonths(birthday) {
     const today = new Date();
@@ -503,110 +504,86 @@
   }
 
   // --- Circular 24h Clock ---
+  const CLK = { R: 120, r: 85, cx: 140, cy: 140, size: 280, handleR: (120 + 85) / 2 };
+
+  function minToAngle(m) { return ((m % 1440) / 1440) * 360 - 90; }
+  function angleToMin(a) { let m = ((a + 90) / 360) * 1440; return Math.round(((m % 1440) + 1440) % 1440 / 5) * 5; }
+  function polar(angle, radius) {
+    const rad = angle * Math.PI / 180;
+    return { x: CLK.cx + radius * Math.cos(rad), y: CLK.cy + radius * Math.sin(rad) };
+  }
+
+  function arcPath(startMin, durMin) {
+    const sa = minToAngle(startMin), ea = minToAngle(startMin + durMin);
+    const sw = durMin >= 720 ? 1 : 0;
+    const os = polar(sa, CLK.R), oe = polar(ea, CLK.R);
+    const is_ = polar(ea, CLK.r), ie = polar(sa, CLK.r);
+    return `M${os.x} ${os.y} A${CLK.R} ${CLK.R} 0 ${sw} 1 ${oe.x} ${oe.y} L${is_.x} ${is_.y} A${CLK.r} ${CLK.r} 0 ${sw} 0 ${ie.x} ${ie.y}Z`;
+  }
+
   function renderClock(bedMin, wakeMin, naps, totalH, nightH, napH) {
     const el = $('mb-clock');
-    const R = 120; // outer radius
-    const r = 85;  // inner radius (donut)
-    const cx = 140, cy = 140;
-    const size = 280;
+    const { R, r, cx, cy, size, handleR } = CLK;
 
-    // Convert minutes to angle (0 min = top of circle = midnight)
-    function minToAngle(m) {
-      return ((m % 1440) / 1440) * 360 - 90; // -90 so midnight is at top
-    }
-
-    function polarToXY(angle, radius) {
-      const rad = (angle * Math.PI) / 180;
-      return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
-    }
-
-    function arcPath(startMin, durationMin, outerR, innerR) {
-      const startAngle = minToAngle(startMin);
-      const endAngle = minToAngle(startMin + durationMin);
-      const sweep = durationMin >= 720 ? 1 : 0;
-
-      const outerStart = polarToXY(startAngle, outerR);
-      const outerEnd = polarToXY(endAngle, outerR);
-      const innerStart = polarToXY(endAngle, innerR);
-      const innerEnd = polarToXY(startAngle, innerR);
-
-      return `M ${outerStart.x} ${outerStart.y}
-              A ${outerR} ${outerR} 0 ${sweep} 1 ${outerEnd.x} ${outerEnd.y}
-              L ${innerStart.x} ${innerStart.y}
-              A ${innerR} ${innerR} 0 ${sweep} 0 ${innerEnd.x} ${innerEnd.y}
-              Z`;
-    }
-
-    // Night sleep duration
     let nightDur = wakeMin - bedMin;
     if (nightDur <= 0) nightDur += 1440;
 
-    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" id="clock-svg">`;
 
-    // Background circle (awake color)
-    svg += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--surface-alt)" stroke-width="${R - r}" />`;
-    // Redraw as donut
-    svg += `<path d="${arcPath(0, 1440, R, r)}" fill="var(--surface-alt)" opacity="0.5"/>`;
+    // Background donut
+    svg += `<path d="${arcPath(0, 1440)}" fill="var(--surface-alt)" opacity="0.5"/>`;
 
-    // Night sleep arc
-    svg += `<path d="${arcPath(bedMin, nightDur, R, r)}" fill="var(--sleep-night)" opacity="0.9"/>`;
+    // Night arc
+    svg += `<path d="${arcPath(bedMin, nightDur)}" fill="var(--sleep-night)" opacity="0.9" class="clock-arc" data-type="night"/>`;
 
     // Nap arcs
-    naps.forEach(n => {
-      const start = t2m(n.start);
-      const dur = napDuration(n);
-      svg += `<path d="${arcPath(start, dur, R, r)}" fill="var(--sleep-nap)" opacity="0.85"/>`;
+    naps.forEach((n, i) => {
+      svg += `<path d="${arcPath(t2m(n.start), napDuration(n))}" fill="var(--sleep-nap)" opacity="0.85" class="clock-arc" data-type="nap" data-idx="${i}"/>`;
     });
 
-    // Hour tick marks and labels
+    // Hour ticks
     for (let h = 0; h < 24; h++) {
-      const angle = minToAngle(h * 60);
-      const tickOuter = polarToXY(angle, R + 2);
-      const tickInner = polarToXY(angle, R - 3);
-      const isMajor = h % 6 === 0;
-      svg += `<line x1="${tickOuter.x}" y1="${tickOuter.y}" x2="${tickInner.x}" y2="${tickInner.y}"
-              stroke="var(--text-muted)" stroke-width="${isMajor ? 1.5 : 0.5}" opacity="${isMajor ? 0.7 : 0.3}"/>`;
-
-      if (isMajor) {
-        const lp = polarToXY(angle, R + 14);
-        const label = h === 0 ? '0' : h.toString();
-        svg += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" dominant-baseline="central"
-                font-size="10" font-weight="500" fill="var(--text-muted)">${label}</text>`;
+      const a = minToAngle(h * 60);
+      const o = polar(a, R + 2), i_ = polar(a, R - 3);
+      const major = h % 6 === 0;
+      svg += `<line x1="${o.x}" y1="${o.y}" x2="${i_.x}" y2="${i_.y}" stroke="var(--text-muted)" stroke-width="${major ? 1.5 : 0.5}" opacity="${major ? 0.7 : 0.3}"/>`;
+      if (major) {
+        const lp = polar(a, R + 14);
+        svg += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="500" fill="var(--text-muted)">${h || '0'}</text>`;
       }
     }
 
-    // Bedtime marker
-    const bedAngle = minToAngle(bedMin);
-    const bedP = polarToXY(bedAngle, R + 6);
-    svg += `<circle cx="${bedP.x}" cy="${bedP.y}" r="4" fill="var(--sleep-night)" stroke="var(--surface)" stroke-width="1.5"/>`;
-
-    // Wake marker
-    const wakeAngle = minToAngle(wakeMin);
-    const wakeP = polarToXY(wakeAngle, R + 6);
-    svg += `<circle cx="${wakeP.x}" cy="${wakeP.y}" r="4" fill="var(--wake)" stroke="var(--surface)" stroke-width="1.5"/>`;
-
-    // Nap labels on the arcs
+    // Nap labels
     naps.forEach((n, i) => {
-      const start = t2m(n.start);
       const dur = napDuration(n);
-      if (dur >= 30) {
-        const midAngle = minToAngle(start + dur / 2);
-        const lp = polarToXY(midAngle, (R + r) / 2);
-        svg += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" dominant-baseline="central"
-                font-size="9" font-weight="600" fill="white">N${i + 1}</text>`;
+      if (dur >= 25) {
+        const p = polar(minToAngle(t2m(n.start) + dur / 2), (R + r) / 2);
+        svg += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="600" fill="white" pointer-events="none">N${i + 1}</text>`;
       }
+    });
+
+    // Draggable handles
+    function handle(mins, color, id, label) {
+      const p = polar(minToAngle(mins), handleR);
+      svg += `<circle cx="${p.x}" cy="${p.y}" r="10" fill="${color}" stroke="var(--surface)" stroke-width="2.5" class="clock-handle" data-handle="${id}" style="cursor:grab"/>`;
+      const lp = polar(minToAngle(mins), handleR);
+      svg += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="700" fill="white" pointer-events="none">${label}</text>`;
+    }
+
+    handle(bedMin, 'var(--sleep-night)', 'bed', '🌙');
+    handle(wakeMin, 'var(--wake)', 'wake', '☀️');
+    naps.forEach((n, i) => {
+      handle(t2m(n.start), 'var(--sleep-nap)', 'nap-start-' + i, '▸');
+      handle(t2m(n.end), 'var(--sleep-nap)', 'nap-end-' + i, '◂');
     });
 
     svg += '</svg>';
 
-    let html = '<div class="sleep-clock-wrap"><div class="sleep-clock">';
+    let html = '<div class="sleep-clock-wrap"><div class="sleep-clock" id="clock-container">';
     html += svg;
     html += `<div class="clock-center">
       <div class="clock-total">${totalH.toFixed(1)}<span class="clock-total-unit">h</span></div>
-      <div class="clock-sub">
-        🌙 ${nightH.toFixed(1)}h night<br>
-        ${napH > 0 ? '☀️ ' + napH.toFixed(1) + 'h naps' : ''}
-      </div>
+      <div class="clock-sub">🌙 ${nightH.toFixed(1)}h night${napH > 0 ? '<br>☀️ ' + napH.toFixed(1) + 'h naps' : ''}</div>
     </div>`;
     html += '</div></div>';
     html += '<div class="clock-legend">';
@@ -616,6 +593,80 @@
     html += '</div>';
 
     el.innerHTML = html;
+
+    // --- Drag interaction ---
+    const svgEl = document.getElementById('clock-svg');
+    if (!svgEl) return;
+
+    function getMinFromEvent(e) {
+      const rect = svgEl.getBoundingClientRect();
+      const scaleX = size / rect.width, scaleY = size / rect.height;
+      const px = e.touches ? e.touches[0].clientX : e.clientX;
+      const py = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = (px - rect.left) * scaleX - cx;
+      const y = (py - rect.top) * scaleY - cy;
+      return angleToMin(Math.atan2(y, x) * 180 / Math.PI);
+    }
+
+    function onStart(e) {
+      const target = e.target.closest('.clock-handle');
+      if (!target) return;
+      e.preventDefault();
+      clockDrag = target.dataset.handle;
+    }
+
+    svgEl.addEventListener('mousedown', onStart);
+    svgEl.addEventListener('touchstart', onStart, { passive: false });
+
+    // Reuse single global handlers (set up once)
+    if (!window._clockMoveSet) {
+      window._clockMoveSet = true;
+
+      function onMove(e) {
+        if (!clockDrag) return;
+        e.preventDefault();
+        const svgNow = document.getElementById('clock-svg');
+        if (!svgNow) return;
+        const rect = svgNow.getBoundingClientRect();
+        const scaleX = size / rect.width, scaleY = size / rect.height;
+        const px = e.touches ? e.touches[0].clientX : e.clientX;
+        const py = e.touches ? e.touches[0].clientY : e.clientY;
+        const x = (px - rect.left) * scaleX - cx;
+        const y = (py - rect.top) * scaleY - cy;
+        const mins = angleToMin(Math.atan2(y, x) * 180 / Math.PI);
+
+        if (clockDrag === 'bed') {
+          mb.bedtime = m2t(mins);
+          $('mb-bedtime').value = mb.bedtime;
+        } else if (clockDrag === 'wake') {
+          mb.waketime = m2t(mins);
+          $('mb-waketime').value = mb.waketime;
+        } else if (clockDrag.startsWith('nap-start-')) {
+          const idx = parseInt(clockDrag.split('-')[2]);
+          if (mb.napTimes[idx]) mb.napTimes[idx].start = m2t(mins);
+        } else if (clockDrag.startsWith('nap-end-')) {
+          const idx = parseInt(clockDrag.split('-')[2]);
+          if (mb.napTimes[idx]) mb.napTimes[idx].end = m2t(mins);
+        }
+
+        saveMB();
+        renderNapInputs();
+        renderResults();
+      }
+
+      function onEnd() {
+        if (!clockDrag) return;
+        const wasNap = clockDrag.startsWith('nap-');
+        const idx = wasNap ? parseInt(clockDrag.split('-')[2]) : -1;
+        clockDrag = null;
+        if (wasNap && idx >= 0) recalcFromNap(idx);
+      }
+
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup', onEnd);
+      window.addEventListener('touchend', onEnd);
+    }
   }
 
   function renderResults() {
