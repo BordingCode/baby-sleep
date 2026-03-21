@@ -288,7 +288,6 @@
 
   // --- My Baby Planner ---
   let mb = { birthday: '', bedtime: '19:00', waketime: '07:00', napCount: 2, napTimes: [] };
-  let clockDrag = null;
 
   function getAgeMonths(birthday) {
     const today = new Date();
@@ -504,10 +503,9 @@
   }
 
   // --- Circular 24h Clock ---
-  const CLK = { R: 120, r: 85, cx: 140, cy: 140, size: 280, handleR: (120 + 85) / 2 };
+  const CLK = { R: 120, r: 85, cx: 140, cy: 140, size: 280 };
 
   function minToAngle(m) { return ((m % 1440) / 1440) * 360 - 90; }
-  function angleToMin(a) { let m = ((a + 90) / 360) * 1440; return Math.round(((m % 1440) + 1440) % 1440 / 5) * 5; }
   function polar(angle, radius) {
     const rad = angle * Math.PI / 180;
     return { x: CLK.cx + radius * Math.cos(rad), y: CLK.cy + radius * Math.sin(rad) };
@@ -521,22 +519,101 @@
     return `M${os.x} ${os.y} A${CLK.R} ${CLK.R} 0 ${sw} 1 ${oe.x} ${oe.y} L${is_.x} ${is_.y} A${CLK.r} ${CLK.r} 0 ${sw} 0 ${ie.x} ${ie.y}Z`;
   }
 
+  function closeClockEdit() {
+    const existing = document.querySelector('.clock-edit-popup');
+    if (existing) existing.remove();
+  }
+
+  function showClockEdit(type, idx) {
+    closeClockEdit();
+    const popup = document.createElement('div');
+    popup.className = 'clock-edit-popup';
+
+    if (type === 'night') {
+      popup.innerHTML = `
+        <div class="clock-edit-title">🌙 Night Sleep</div>
+        <div class="clock-edit-row">
+          <label>Bedtime</label>
+          <input type="time" value="${mb.bedtime}" data-field="bedtime">
+        </div>
+        <div class="clock-edit-row">
+          <label>Wake up</label>
+          <input type="time" value="${mb.waketime}" data-field="waketime">
+        </div>`;
+    } else {
+      const nap = mb.napTimes[idx];
+      popup.innerHTML = `
+        <div class="clock-edit-title">😴 Nap ${idx + 1}</div>
+        <div class="clock-edit-row">
+          <label>Start</label>
+          <input type="time" value="${nap.start}" data-field="nap-start" data-idx="${idx}">
+        </div>
+        <div class="clock-edit-row">
+          <label>End</label>
+          <input type="time" value="${nap.end}" data-field="nap-end" data-idx="${idx}">
+        </div>`;
+    }
+
+    $('mb-clock').appendChild(popup);
+
+    // Animate in
+    requestAnimationFrame(() => popup.classList.add('visible'));
+
+    popup.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const field = inp.dataset.field;
+        if (field === 'bedtime') {
+          mb.bedtime = inp.value;
+          $('mb-bedtime').value = inp.value;
+        } else if (field === 'waketime') {
+          mb.waketime = inp.value;
+          $('mb-waketime').value = inp.value;
+        } else if (field === 'nap-start') {
+          const i = parseInt(inp.dataset.idx);
+          mb.napTimes[i].start = inp.value;
+          saveMB();
+          recalcFromNap(i);
+          return;
+        } else if (field === 'nap-end') {
+          const i = parseInt(inp.dataset.idx);
+          mb.napTimes[i].end = inp.value;
+          saveMB();
+          recalcFromNap(i);
+          return;
+        }
+        saveMB();
+        renderNapInputs();
+        renderResults();
+      });
+    });
+
+    // Close when tapping outside
+    setTimeout(() => {
+      document.addEventListener('click', function handler(e) {
+        if (!popup.contains(e.target) && !e.target.closest('.clock-arc')) {
+          closeClockEdit();
+          document.removeEventListener('click', handler);
+        }
+      });
+    }, 100);
+  }
+
   function renderClock(bedMin, wakeMin, naps, totalH, nightH, napH) {
     const el = $('mb-clock');
-    const { R, r, cx, cy, size, handleR } = CLK;
+    const { R, r, cx, cy, size } = CLK;
 
     let nightDur = wakeMin - bedMin;
     if (nightDur <= 0) nightDur += 1440;
 
-    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" id="clock-svg">`;
+    let svg = `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
 
     // Background donut
     svg += `<path d="${arcPath(0, 1440)}" fill="var(--surface-alt)" opacity="0.5"/>`;
 
-    // Night arc
+    // Night arc — tappable
     svg += `<path d="${arcPath(bedMin, nightDur)}" fill="var(--sleep-night)" opacity="0.9" class="clock-arc" data-type="night"/>`;
 
-    // Nap arcs
+    // Nap arcs — tappable
     naps.forEach((n, i) => {
       svg += `<path d="${arcPath(t2m(n.start), napDuration(n))}" fill="var(--sleep-nap)" opacity="0.85" class="clock-arc" data-type="nap" data-idx="${i}"/>`;
     });
@@ -562,24 +639,13 @@
       }
     });
 
-    // Draggable handles
-    function handle(mins, color, id, label) {
-      const p = polar(minToAngle(mins), handleR);
-      svg += `<circle cx="${p.x}" cy="${p.y}" r="10" fill="${color}" stroke="var(--surface)" stroke-width="2.5" class="clock-handle" data-handle="${id}" style="cursor:grab"/>`;
-      const lp = polar(minToAngle(mins), handleR);
-      svg += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" dominant-baseline="central" font-size="7" font-weight="700" fill="white" pointer-events="none">${label}</text>`;
-    }
-
-    handle(bedMin, 'var(--sleep-night)', 'bed', '🌙');
-    handle(wakeMin, 'var(--wake)', 'wake', '☀️');
-    naps.forEach((n, i) => {
-      handle(t2m(n.start), 'var(--sleep-nap)', 'nap-start-' + i, '▸');
-      handle(t2m(n.end), 'var(--sleep-nap)', 'nap-end-' + i, '◂');
-    });
+    // Night label
+    const nightMid = polar(minToAngle(bedMin + nightDur / 2), (R + r) / 2);
+    svg += `<text x="${nightMid.x}" y="${nightMid.y}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="white" pointer-events="none">Night</text>`;
 
     svg += '</svg>';
 
-    let html = '<div class="sleep-clock-wrap"><div class="sleep-clock" id="clock-container">';
+    let html = '<div class="sleep-clock-wrap"><div class="sleep-clock">';
     html += svg;
     html += `<div class="clock-center">
       <div class="clock-total">${totalH.toFixed(1)}<span class="clock-total-unit">h</span></div>
@@ -591,82 +657,20 @@
     html += '<span><span class="legend-dot" style="background:var(--sleep-nap)"></span>Naps</span>';
     html += '<span><span class="legend-dot" style="background:var(--surface-alt)"></span>Awake</span>';
     html += '</div>';
+    html += '<div style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:4px">Tap any sleep block to edit times</div>';
 
     el.innerHTML = html;
 
-    // --- Drag interaction ---
-    const svgEl = document.getElementById('clock-svg');
-    if (!svgEl) return;
-
-    function getMinFromEvent(e) {
-      const rect = svgEl.getBoundingClientRect();
-      const scaleX = size / rect.width, scaleY = size / rect.height;
-      const px = e.touches ? e.touches[0].clientX : e.clientX;
-      const py = e.touches ? e.touches[0].clientY : e.clientY;
-      const x = (px - rect.left) * scaleX - cx;
-      const y = (py - rect.top) * scaleY - cy;
-      return angleToMin(Math.atan2(y, x) * 180 / Math.PI);
-    }
-
-    function onStart(e) {
-      const target = e.target.closest('.clock-handle');
-      if (!target) return;
-      e.preventDefault();
-      clockDrag = target.dataset.handle;
-    }
-
-    svgEl.addEventListener('mousedown', onStart);
-    svgEl.addEventListener('touchstart', onStart, { passive: false });
-
-    // Reuse single global handlers (set up once)
-    if (!window._clockMoveSet) {
-      window._clockMoveSet = true;
-
-      function onMove(e) {
-        if (!clockDrag) return;
-        e.preventDefault();
-        const svgNow = document.getElementById('clock-svg');
-        if (!svgNow) return;
-        const rect = svgNow.getBoundingClientRect();
-        const scaleX = size / rect.width, scaleY = size / rect.height;
-        const px = e.touches ? e.touches[0].clientX : e.clientX;
-        const py = e.touches ? e.touches[0].clientY : e.clientY;
-        const x = (px - rect.left) * scaleX - cx;
-        const y = (py - rect.top) * scaleY - cy;
-        const mins = angleToMin(Math.atan2(y, x) * 180 / Math.PI);
-
-        if (clockDrag === 'bed') {
-          mb.bedtime = m2t(mins);
-          $('mb-bedtime').value = mb.bedtime;
-        } else if (clockDrag === 'wake') {
-          mb.waketime = m2t(mins);
-          $('mb-waketime').value = mb.waketime;
-        } else if (clockDrag.startsWith('nap-start-')) {
-          const idx = parseInt(clockDrag.split('-')[2]);
-          if (mb.napTimes[idx]) mb.napTimes[idx].start = m2t(mins);
-        } else if (clockDrag.startsWith('nap-end-')) {
-          const idx = parseInt(clockDrag.split('-')[2]);
-          if (mb.napTimes[idx]) mb.napTimes[idx].end = m2t(mins);
-        }
-
-        saveMB();
-        renderNapInputs();
-        renderResults();
-      }
-
-      function onEnd() {
-        if (!clockDrag) return;
-        const wasNap = clockDrag.startsWith('nap-');
-        const idx = wasNap ? parseInt(clockDrag.split('-')[2]) : -1;
-        clockDrag = null;
-        if (wasNap && idx >= 0) recalcFromNap(idx);
-      }
-
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('touchmove', onMove, { passive: false });
-      window.addEventListener('mouseup', onEnd);
-      window.addEventListener('touchend', onEnd);
-    }
+    // Tap to edit
+    el.querySelectorAll('.clock-arc').forEach(arc => {
+      arc.style.cursor = 'pointer';
+      arc.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const type = arc.dataset.type;
+        const idx = parseInt(arc.dataset.idx || '0');
+        showClockEdit(type, idx);
+      });
+    });
   }
 
   function renderResults() {
