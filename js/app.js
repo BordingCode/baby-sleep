@@ -389,14 +389,23 @@
     renderResults();
   }
 
+  // Get the appropriate wake window for a position in the day
+  // pos: 0 = first (after morning wake), last = before bedtime, middle = everything else
+  function getWW(age, pos, total) {
+    const wws = age.wakeWindows;
+    if (!wws) return (age.wakeWindow.min + age.wakeWindow.max) / 2;
+    if (pos === 0) return wws.first;
+    if (pos >= total) return wws.last; // last WW is before bedtime
+    return wws.mid;
+  }
+
   function buildDefaultNaps(age, count, wakeMin) {
-    const ww = (age.wakeWindow.min + age.wakeWindow.max) / 2;
     const totalNapH = (age.napSleepHours.min + age.napSleepHours.max) / 2;
     const dur = count > 0 ? Math.round(totalNapH * 60 / count) : 0;
     const naps = [];
     let t = wakeMin;
     for (let i = 0; i < count; i++) {
-      t += ww;
+      t += getWW(age, i, count); // graduated: first WW shortest, last longest
       const start = Math.round(t);
       const d = Math.min(Math.max(dur, 30), 150);
       naps.push({ start: m2t(start), end: m2t(start + d) });
@@ -411,7 +420,6 @@
   function recalcFromNap(changedIdx) {
     const months = getAgeMonths(mb.birthday);
     const age = ageRangeFor(months);
-    const ww = (age.wakeWindow.min + age.wakeWindow.max) / 2;
     const bedMin = t2m(mb.bedtime);
     const totalNapH = (age.napSleepHours.min + age.napSleepHours.max) / 2;
     const avgNapDur = mb.napCount > 0 ? Math.round(totalNapH * 60 / mb.napCount) : 60;
@@ -424,16 +432,17 @@
     const kept = mb.napTimes.slice(0, changedIdx + 1);
     const maxNaps = age.naps.max;
 
-    // Try to fit remaining naps
+    // Try to fit remaining naps using graduated wake windows
     for (let i = changedIdx + 1; i < maxNaps; i++) {
-      const nextStart = cursor + ww;
+      const wwForThis = getWW(age, i, maxNaps);
+      const nextStart = cursor + wwForThis;
       const nextEnd = nextStart + avgNapDur;
 
-      // Does this nap fit before bedtime? Need at least ww/2 before bed
+      // Does this nap fit? Need at least the last wake window before bed
+      const lastWW = getWW(age, maxNaps, maxNaps);
       let timeToBed = bedMin - nextEnd;
       if (timeToBed < 0) timeToBed += 1440;
-      // If the nap would end less than half a wake window before bed, skip it
-      if (timeToBed < ww * 0.4 || timeToBed > 720) break;
+      if (timeToBed < lastWW * 0.4 || timeToBed > 720) break;
 
       kept.push({ start: m2t(Math.round(nextStart)), end: m2t(Math.round(nextEnd)) });
       cursor = nextEnd;
@@ -606,17 +615,21 @@
       </div>
     </div>`;
 
-    // Wake windows
-    wws.forEach(ww => {
-      const ok = ww.mins >= age.wakeWindow.min - 15 && ww.mins <= age.wakeWindow.max + 15;
-      const short = ww.mins < age.wakeWindow.min - 15;
+    // Wake windows — compare each against the correct graduated window
+    const totalWWs = wws.length;
+    wws.forEach((ww, idx) => {
+      const expectedWW = getWW(age, idx, totalWWs - 1);
+      const tolerance = 20;
+      const ok = ww.mins >= expectedWW - tolerance && ww.mins <= expectedWW + tolerance;
+      const short = ww.mins < expectedWW - tolerance;
+      const posLabel = idx === 0 ? 'first (shortest)' : idx === totalWWs - 1 ? 'last (longest)' : 'middle';
       cHtml += `<div class="check-card ${ok ? 'good' : 'warn'}">
         <div class="check-icon">${ok ? '✅' : '⚠️'}</div>
         <div class="check-content">
           <div class="check-title">${ww.label}: ${durLabel(ww.mins)}</div>
-          <div class="check-detail">Recommended: ${formatWakeWindow(age.wakeWindow)}. ${ok ? 'Good spacing!' :
-            short ? 'Too short — baby may not be tired enough. Try stretching by 10–15 min.' :
-            'Too long — baby is likely overtired. Try putting down 15–30 min earlier.'}</div>
+          <div class="check-detail">Recommended ${posLabel} wake window: ~${durLabel(expectedWW)}. ${ok ? 'Good spacing!' :
+            short ? 'Too short — baby may not have enough sleep pressure built up. Try stretching by 10–15 min.' :
+            'Too long — cortisol may kick in from overtiredness, making sleep harder. Try putting down 15–30 min earlier.'}</div>
         </div>
       </div>`;
     });
@@ -667,19 +680,21 @@
       });
     }
 
-    // Wake window advice
-    wws.forEach(ww => {
-      if (ww.mins < age.wakeWindow.min - 20) {
+    // Wake window advice — using graduated windows
+    wws.forEach((ww, idx) => {
+      const expectedWW = getWW(age, idx, wws.length - 1);
+      const posLabel = idx === 0 ? 'first' : idx === wws.length - 1 ? 'last' : 'middle';
+      if (ww.mins < expectedWW - 25) {
         tips.push({
           icon: '⏰',
           title: ww.label + ' is too short',
-          text: `${durLabel(ww.mins)} awake is below the recommended ${formatWakeWindow(age.wakeWindow)}. Baby may not be tired enough to sleep well. Try adding 10–15 minutes of play or tummy time.`
+          text: `${durLabel(ww.mins)} awake vs ~${durLabel(expectedWW)} recommended for the ${posLabel} wake window. Baby may not have built enough sleep pressure. Try stretching by 10–15 min with play or tummy time.`
         });
-      } else if (ww.mins > age.wakeWindow.max + 20) {
+      } else if (ww.mins > expectedWW + 25) {
         tips.push({
           icon: '⏰',
           title: ww.label + ' is too long',
-          text: `${durLabel(ww.mins)} awake is above the recommended ${formatWakeWindow(age.wakeWindow)}. An overtired baby often fights sleep harder. Try putting baby down 15–30 min earlier.`
+          text: `${durLabel(ww.mins)} awake vs ~${durLabel(expectedWW)} recommended for the ${posLabel} wake window. Cortisol rises when babies are overtired, making them wired instead of sleepy. Try putting baby down 15–30 min earlier.`
         });
       }
     });
@@ -694,10 +709,8 @@
       });
     }
 
-    // Build suggested optimal schedule
+    // Build suggested optimal schedule using graduated wake windows
     const optWake = recWake;
-    const optBed = recBed;
-    const optWW = (age.wakeWindow.min + age.wakeWindow.max) / 2;
     const optNapDur = recNapCount > 0 ? Math.round(recNapH * 60 / recNapCount) : 0;
 
     let sugHtml = '<div class="suggested-section"><div class="suggested-title">Optimal Schedule for ' + ageLabel(mb.birthday) + '</div>';
@@ -705,11 +718,14 @@
 
     let ot = optWake;
     for (let i = 0; i < recNapCount; i++) {
-      ot += optWW;
+      ot += getWW(age, i, recNapCount); // graduated: first WW shortest
       const ns = Math.round(ot), ne = ns + optNapDur;
       sugHtml += `<div class="suggested-item"><span class="suggested-item-label">😴 Nap ${i + 1}</span><span class="suggested-item-value">${m2t(ns)} – ${m2t(ne)} (${durLabel(optNapDur)})</span></div>`;
       ot = ne;
     }
+    // Bedtime = last nap end + last wake window
+    ot += getWW(age, recNapCount, recNapCount);
+    const optBed = Math.round(ot);
     sugHtml += `<div class="suggested-item"><span class="suggested-item-label">🌙 Bedtime</span><span class="suggested-item-value">${m2t(optBed)}</span></div>`;
     sugHtml += '</div>';
 

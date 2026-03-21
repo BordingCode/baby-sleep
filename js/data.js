@@ -7,13 +7,14 @@ const SLEEP_DATA = {
       minMonths: 0,
       maxMonths: 1,
       wakeWindow: { min: 35, max: 60, unit: 'min' },
+      wakeWindows: { first: 35, mid: 45, last: 60 },
       naps: { min: 4, max: 8, label: '4–8 (irregular)' },
       napSleepHours: { min: 6, max: 8 },
       nightSleepHours: { min: 8, max: 10 },
       totalSleepHours: { min: 14, max: 17 },
       feedingsPerNight: '2–4+',
       canSelfSoothe: false,
-      notes: 'Sleep is irregular and that is completely normal. Day/night confusion is common. No schedule needed yet — follow your baby\'s cues.'
+      notes: 'Sleep is irregular and that is completely normal. Day/night confusion is common. No schedule needed yet — follow your baby\'s cues. Sleep pressure builds quickly at this age so watch for drowsy signs after just 35–60 minutes awake.'
     },
     {
       id: '2mo',
@@ -22,13 +23,14 @@ const SLEEP_DATA = {
       minMonths: 2,
       maxMonths: 2,
       wakeWindow: { min: 60, max: 90, unit: 'min' },
+      wakeWindows: { first: 60, mid: 75, last: 90 },
       naps: { min: 4, max: 5, label: '4–5' },
       napSleepHours: { min: 4, max: 6 },
       nightSleepHours: { min: 9, max: 11 },
       totalSleepHours: { min: 14, max: 17 },
       feedingsPerNight: '2–3',
       canSelfSoothe: false,
-      notes: 'Circadian rhythm is starting to develop. You may notice a longer stretch of sleep at night emerging. Keep daytime bright and nighttime dark.'
+      notes: 'Circadian rhythm is starting to develop. You may notice a longer stretch of sleep at night emerging (3–5 hours). Keep daytime bright and nighttime dark to reinforce this.'
     },
     {
       id: '3mo',
@@ -37,13 +39,14 @@ const SLEEP_DATA = {
       minMonths: 3,
       maxMonths: 3,
       wakeWindow: { min: 75, max: 105, unit: 'min' },
+      wakeWindows: { first: 75, mid: 90, last: 105 },
       naps: { min: 3, max: 4, label: '3–4' },
       napSleepHours: { min: 3.5, max: 5 },
       nightSleepHours: { min: 10, max: 11 },
       totalSleepHours: { min: 14, max: 16 },
       feedingsPerNight: '1–3',
       canSelfSoothe: false,
-      notes: 'Sleep patterns become more predictable. A loose routine can start to form around wake windows. The last nap of the day is often the shortest.'
+      notes: 'Sleep patterns become more predictable. The first wake window of the day is the shortest (~75 min). The last nap is often a short catnap (20–30 min) to bridge to bedtime.'
     },
     {
       id: '4mo',
@@ -52,13 +55,14 @@ const SLEEP_DATA = {
       minMonths: 4,
       maxMonths: 4,
       wakeWindow: { min: 90, max: 120, unit: 'min' },
+      wakeWindows: { first: 90, mid: 105, last: 120 },
       naps: { min: 3, max: 4, label: '3–4' },
       napSleepHours: { min: 3, max: 4 },
-      nightSleepHours: { min: 10, max: 11 },
-      totalSleepHours: { min: 13, max: 16 },
+      nightSleepHours: { min: 10, max: 12 },
+      totalSleepHours: { min: 12, max: 16 },
       feedingsPerNight: '1–2',
       canSelfSoothe: false,
-      notes: 'A major developmental shift happens around 4 months — sleep cycles change from newborn to adult-like patterns. This can cause temporary disruption (the "4-month regression").'
+      notes: 'A major developmental shift happens now — sleep cycles change permanently from newborn to adult-like patterns (light sleep → deep sleep → REM). This causes the "4-month regression." Bedtime should start moving earlier (19:00–20:00) as the circadian rhythm matures.'
     },
     {
       id: '5mo',
@@ -67,13 +71,14 @@ const SLEEP_DATA = {
       minMonths: 5,
       maxMonths: 5,
       wakeWindow: { min: 120, max: 150, unit: 'min' },
+      wakeWindows: { first: 105, mid: 120, last: 150 },
       naps: { min: 3, max: 3, label: '3' },
       napSleepHours: { min: 2.5, max: 3.5 },
-      nightSleepHours: { min: 10, max: 11 },
+      nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 13, max: 15 },
       feedingsPerNight: '0–2',
       canSelfSoothe: true,
-      notes: 'Most babies settle into a 3-nap pattern. Wake windows become more consistent. Some babies begin to self-soothe at this age.'
+      notes: 'Most babies settle into 3 naps: a longer morning nap, a longer midday nap, and a short late-afternoon catnap. The first wake window (~1h45) is shorter than the last (~2h30). Some babies begin self-soothing.'
     },
     {
       id: '6mo',
@@ -81,14 +86,15 @@ const SLEEP_DATA = {
       ageLabel: '6 months',
       minMonths: 6,
       maxMonths: 6,
-      wakeWindow: { min: 120, max: 150, unit: 'min' },
+      wakeWindow: { min: 120, max: 165, unit: 'min' },
+      wakeWindows: { first: 120, mid: 135, last: 165 },
       naps: { min: 2, max: 3, label: '2–3' },
       napSleepHours: { min: 2.5, max: 3.5 },
       nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 13, max: 15 },
       feedingsPerNight: '0–1',
       canSelfSoothe: true,
-      notes: 'Many babies transition from 3 to 2 naps around this age. Most are physically capable of sleeping through the night, though some still need one feeding.'
+      notes: 'Many babies drop the third nap (catnap) around now, moving to 2 naps. The morning nap is the most restorative (driven by sleep pressure) and should be protected. Most babies can physically sleep through the night.'
     },
     {
       id: '7-8mo',
@@ -96,14 +102,15 @@ const SLEEP_DATA = {
       ageLabel: '7–8 months',
       minMonths: 7,
       maxMonths: 8,
-      wakeWindow: { min: 150, max: 180, unit: 'min' },
+      wakeWindow: { min: 150, max: 195, unit: 'min' },
+      wakeWindows: { first: 150, mid: 165, last: 195 },
       naps: { min: 2, max: 2, label: '2' },
       napSleepHours: { min: 2, max: 3 },
       nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 13, max: 15 },
       feedingsPerNight: '0–1',
       canSelfSoothe: true,
-      notes: 'Two solid naps are the norm. Separation anxiety may emerge and affect bedtime. Crawling and pulling up can cause temporary sleep disruption.'
+      notes: 'Two solid naps (morning + afternoon). The wake window before bedtime (~3h15) is the longest of the day — this builds enough sleep pressure for a long night. Separation anxiety may emerge.'
     },
     {
       id: '9-10mo',
@@ -111,14 +118,15 @@ const SLEEP_DATA = {
       ageLabel: '9–10 months',
       minMonths: 9,
       maxMonths: 10,
-      wakeWindow: { min: 180, max: 210, unit: 'min' },
+      wakeWindow: { min: 180, max: 225, unit: 'min' },
+      wakeWindows: { first: 180, mid: 195, last: 225 },
       naps: { min: 2, max: 2, label: '2' },
       napSleepHours: { min: 2, max: 3 },
       nightSleepHours: { min: 10, max: 12 },
-      totalSleepHours: { min: 13, max: 14 },
+      totalSleepHours: { min: 12, max: 14 },
       feedingsPerNight: '0–1',
       canSelfSoothe: true,
-      notes: 'Wake windows lengthen. Some babies briefly resist the second nap — this is usually not a sign to drop it yet. Keep the 2-nap schedule.'
+      notes: 'Wake windows lengthen. The last wake window before bed (~3h45) is now significantly longer than the first (~3h). Some babies briefly resist the second nap — keep offering it, they\'re not ready to drop to 1 nap yet.'
     },
     {
       id: '11-12mo',
@@ -126,14 +134,15 @@ const SLEEP_DATA = {
       ageLabel: '11–12 months',
       minMonths: 11,
       maxMonths: 12,
-      wakeWindow: { min: 180, max: 240, unit: 'min' },
+      wakeWindow: { min: 195, max: 255, unit: 'min' },
+      wakeWindows: { first: 195, mid: 210, last: 255 },
       naps: { min: 1, max: 2, label: '1–2' },
       napSleepHours: { min: 2, max: 3 },
       nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 12, max: 14 },
       feedingsPerNight: '0',
       canSelfSoothe: true,
-      notes: 'The 12-month regression (walking, standing) can temporarily disrupt sleep. Most babies still need 2 naps — the transition to 1 nap usually happens closer to 14–15 months.'
+      notes: 'The 12-month regression (walking, standing) can temporarily disrupt sleep. Most babies still need 2 naps — don\'t drop to 1 nap yet. The transition to 1 nap usually happens at 14–18 months.'
     },
     {
       id: '13-15mo',
@@ -141,14 +150,15 @@ const SLEEP_DATA = {
       ageLabel: '13–15 months',
       minMonths: 13,
       maxMonths: 15,
-      wakeWindow: { min: 210, max: 270, unit: 'min' },
+      wakeWindow: { min: 210, max: 285, unit: 'min' },
+      wakeWindows: { first: 210, mid: 240, last: 285 },
       naps: { min: 1, max: 2, label: '1–2' },
       napSleepHours: { min: 2, max: 3 },
       nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 12, max: 14 },
       feedingsPerNight: '0',
       canSelfSoothe: true,
-      notes: 'Many babies transition to 1 nap between 14–16 months. Signs of readiness: fighting the second nap for 2+ weeks, or the second nap pushes bedtime too late.'
+      notes: 'Many babies transition to 1 nap between 14–18 months. Signs of readiness: consistently fighting the second nap for 2+ weeks, or the second nap pushes bedtime too late. During the transition, move bedtime earlier temporarily.'
     },
     {
       id: '16-18mo',
@@ -156,14 +166,15 @@ const SLEEP_DATA = {
       ageLabel: '16–18 months',
       minMonths: 16,
       maxMonths: 18,
-      wakeWindow: { min: 240, max: 330, unit: 'min' },
+      wakeWindow: { min: 270, max: 345, unit: 'min' },
+      wakeWindows: { first: 270, mid: 300, last: 345 },
       naps: { min: 1, max: 1, label: '1' },
       napSleepHours: { min: 2, max: 3 },
       nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 12, max: 14 },
       feedingsPerNight: '0',
       canSelfSoothe: true,
-      notes: 'One midday nap is standard. The 18-month regression (language explosion, independence, teething) can cause bedtime resistance and night waking.'
+      notes: 'One midday nap is standard. With 1 nap, the wake window before bed (~5h45) is much longer than the morning one (~4h30). The 18-month regression (language explosion, independence, molars) can cause bedtime resistance.'
     },
     {
       id: '19-24mo',
@@ -172,13 +183,14 @@ const SLEEP_DATA = {
       minMonths: 19,
       maxMonths: 24,
       wakeWindow: { min: 300, max: 360, unit: 'min' },
+      wakeWindows: { first: 300, mid: 330, last: 360 },
       naps: { min: 1, max: 1, label: '1' },
       napSleepHours: { min: 1.5, max: 2.5 },
       nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 11, max: 14 },
       feedingsPerNight: '0',
       canSelfSoothe: true,
-      notes: 'Toddlers thrive on routine and consistency. Bedtime resistance ("one more book!") is common. Offering limited choices helps: "Do you want the blue pajamas or the green ones?"'
+      notes: 'Toddlers thrive on routine and consistency. The single nap should be around midday (12:00–13:00 start). Bedtime resistance ("one more book!") is common — offering limited choices helps.'
     },
     {
       id: '2-3yr',
@@ -187,13 +199,14 @@ const SLEEP_DATA = {
       minMonths: 24,
       maxMonths: 36,
       wakeWindow: { min: 300, max: 420, unit: 'min' },
+      wakeWindows: { first: 330, mid: 360, last: 420 },
       naps: { min: 0, max: 1, label: '0–1' },
       napSleepHours: { min: 0, max: 2 },
       nightSleepHours: { min: 10, max: 12 },
       totalSleepHours: { min: 11, max: 14 },
       feedingsPerNight: '0',
       canSelfSoothe: true,
-      notes: 'Many children drop the nap between 2.5–3.5 years. Signs: nap causes late bedtime, or child is not tired at nap time for 2+ weeks. Introduce quiet time as a nap replacement.'
+      notes: 'Many children drop the nap between 2.5–4 years. Signs: nap causes bedtime to push past 20:30, or child isn\'t tired at nap time for 2+ weeks. Replace with 45–60 min quiet time. If dropping the nap, temporarily move bedtime 30–60 min earlier.'
     }
   ],
 
@@ -436,6 +449,26 @@ const SLEEP_DATA = {
       ]
     },
     {
+      id: 'overtiredness',
+      title: 'Overtiredness & Cortisol',
+      icon: '😵',
+      ageRelevance: [0, 36],
+      causes: [
+        'Stayed awake longer than the recommended wake window',
+        'Missed nap or very short nap earlier in the day',
+        'Exciting or stimulating activity too close to sleep time',
+        'Accumulated sleep debt over multiple days'
+      ],
+      solutions: [
+        'When babies stay awake too long, their body releases cortisol (stress hormone) to fight fatigue — this makes them hyperactive and harder to put down, not easier',
+        'Watch for early drowsy cues: brief staring, less eye contact, slight yawning. Don\'t wait for crying and eye rubbing — that\'s already overtired',
+        'If overtired, try a calmer, shorter routine in a dark room with white noise',
+        'The first wake window of the day is the shortest — babies are most sensitive to overtiredness in the morning',
+        'The last wake window before bedtime is the longest — sleep pressure has built up all day',
+        'If baby had a bad nap day, move bedtime 30–60 min earlier to prevent a cortisol spiral'
+      ]
+    },
+    {
       id: 'dst',
       title: 'Daylight Saving Time Adjustment',
       icon: '🕐',
@@ -484,7 +517,8 @@ const SLEEP_DATA = {
         'Use a room thermometer — your body adjusts to the room and can\'t gauge it accurately',
         'Dress baby in one more layer than you would wear',
         'Feel baby\'s chest or back of neck to check temperature (hands and feet are often cool and not reliable)',
-        'No loose blankets under 12 months — use a sleep sack instead'
+        'No loose blankets under 12 months — use a sleep sack instead',
+        'Avoid weighted sleep sacks or weighted swaddles — the AAP advises against them due to safety concerns'
       ],
       togGuide: [
         { temp: 'Above 24°C (75°F)', clothing: 'Diaper/bodysuit only', tog: '0.5 TOG or none' },
