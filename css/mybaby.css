@@ -1,0 +1,323 @@
+/* My Baby planner */
+.planner-intro {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.planner-form {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.planner-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--surface-alt);
+}
+
+.planner-row:last-child {
+  border-bottom: none;
+}
+
+.planner-label {
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planner-label-icon {
+  font-size: 18px;
+}
+
+.planner-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planner-input input[type="time"] {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border: 2px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.planner-input input[type="time"]:focus {
+  border-color: var(--primary);
+}
+
+/* Nap stepper */
+.nap-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nap-stepper-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  background: none;
+  color: var(--primary);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nap-stepper-btn:active {
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.nap-stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.nap-stepper-value {
+  font-size: 20px;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Nap times */
+.nap-times {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.nap-times-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nap-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface-alt);
+}
+
+.nap-time-row:last-child {
+  border-bottom: none;
+}
+
+.nap-time-label {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.nap-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.nap-time-inputs input[type="time"] {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border: 2px solid var(--surface-alt);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  width: 100px;
+}
+
+.nap-time-inputs input[type="time"]:focus {
+  border-color: var(--primary);
+}
+
+/* Timeline */
+.timeline-section {
+  margin-bottom: 16px;
+}
+
+.timeline-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.timeline-bar {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  height: 48px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.timeline-block {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  overflow: hidden;
+  border-radius: 4px;
+  min-width: 2px;
+}
+
+.timeline-block.night { background: var(--sleep-night); }
+.timeline-block.nap { background: var(--sleep-nap); }
+.timeline-block.wake { background: var(--wake); opacity: 0.5; }
+
+.timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 0 0;
+}
+
+.timeline-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Checks */
+.checks-section {
+  margin-bottom: 12px;
+}
+
+.check-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.check-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.check-content {
+  flex: 1;
+}
+
+.check-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.check-detail {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.check-card.good { border-left: 3px solid var(--success); }
+.check-card.warn { border-left: 3px solid var(--warning); }
+.check-card.info { border-left: 3px solid var(--primary-light); }
+
+/* Suggested schedule */
+.suggested-section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.suggested-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--primary);
+}
+
+.suggested-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--surface-alt);
+  font-size: 14px;
+}
+
+.suggested-item:last-child {
+  border-bottom: none;
+}
+
+.suggested-item-label {
+  color: var(--text-muted);
+}
+
+.suggested-item-value {
+  font-weight: 600;
+}
+
+/* Empty state */
+.planner-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.planner-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.planner-empty-text {
+  font-size: 14px;
+  line-height: 1.5;
+}

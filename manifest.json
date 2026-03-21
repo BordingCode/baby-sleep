@@ -2,7 +2,7 @@
   "name": "Baby Sleep Guide",
   "short_name": "Baby Sleep",
   "description": "Science-based baby sleep guide for parents",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#F5F3FA",
   "theme_color": "#F5F3FA",

@@ -436,6 +436,25 @@ const SLEEP_DATA = {
       ]
     },
     {
+      id: 'dst',
+      title: 'Daylight Saving Time Adjustment',
+      icon: '🕐',
+      ageRelevance: [0, 36],
+      causes: [
+        'Clocks shift forward or back by 1 hour',
+        'Baby\'s internal clock doesn\'t adjust instantly',
+        'Bedtime and wake time feel "off" for several days'
+      ],
+      solutions: [
+        'Shift schedule gradually: move bedtime by 15 minutes per day over 4 days',
+        'Spring forward: put baby down 15 min earlier each night leading up to the change',
+        'Fall back: put baby down 15 min later each night leading up to the change',
+        'Use light exposure to help reset the body clock — bright mornings, dark evenings',
+        'Most babies adjust within 3–7 days — be patient and consistent',
+        'Keep the bedtime routine exactly the same regardless of clock changes'
+      ]
+    },
+    {
       id: 'day-night-confusion',
       title: 'Day/Night Confusion',
       icon: '🔀',
@@ -511,7 +530,7 @@ const SLEEP_DATA = {
         'Always place baby on their back to sleep — until they can roll both ways independently',
         'Use a firm, flat sleep surface (crib, bassinet, or play yard that meets safety standards)',
         'No blankets, pillows, bumpers, stuffed animals, or positioners in the sleep space',
-        'Room-sharing (not bed-sharing) is recommended for at least the first 6 months',
+        'Room-sharing (not bed-sharing) is recommended for at least the first 6 months — avoid bed-sharing, baby should always sleep in their own crib or bassinet',
         'No sleep positioners, wedges, or inclined sleepers',
         'Offer a pacifier at sleep time — this can reduce SIDS risk',
         'No smoking in the home or around baby',
@@ -580,7 +599,7 @@ const SLEEP_DATA = {
           { icon: '🛏️', step: 'Place awake in crib', duration: '—' }
         ]
       },
-      tip: 'At this age, try to separate feeding from the moment of falling asleep. Feed earlier in the routine so baby doesn\'t associate eating with sleeping.'
+      tip: 'At this age, try to separate feeding from the moment of falling asleep. Feed earlier in the routine so baby doesn\'t associate eating with sleeping. During wake windows, feed early (right after waking) so baby falls asleep from tiredness, not fullness.'
     },
     {
       ageRange: '7–12 months',
@@ -645,7 +664,7 @@ const SLEEP_DATA = {
           { icon: '🛏️', step: 'Into crib/bed', duration: '—' }
         ]
       },
-      tip: 'Give your toddler small choices within the routine — which pajamas, which books, which stuffed animal. This gives them a sense of control and reduces battles.'
+      tip: 'Give your toddler small choices within the routine — which pajamas, which books, which stuffed animal. This gives them a sense of control and reduces battles. A lovey or transitional object is safe from 12 months when baby can move items independently — it becomes a positive sleep association.'
     },
     {
       ageRange: '2–3 years',

@@ -20,6 +20,8 @@
   background: var(--surface-alt);
 }
 
+[data-theme="dark"] .tip-card { border: 1px solid var(--surface-alt); }
+
 .tip-icon {
   font-size: 22px;
   flex-shrink: 0;

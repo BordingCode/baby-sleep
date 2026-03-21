@@ -1,16 +1,17 @@
-const CACHE = 'baby-sleep-v1';
+const CACHE = 'baby-sleep-v2';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/shared.css',
-  '/css/home.css',
-  '/css/tips.css',
-  '/css/environment.css',
-  '/css/routines.css',
-  '/js/data.js',
-  '/js/app.js',
-  '/manifest.json',
-  '/icons/favicon.svg'
+  './',
+  './index.html',
+  './css/shared.css',
+  './css/home.css',
+  './css/tips.css',
+  './css/environment.css',
+  './css/routines.css',
+  './css/mybaby.css',
+  './js/data.js',
+  './js/app.js',
+  './manifest.json',
+  './icons/favicon.svg'
 ];
 
 self.addEventListener('install', e => {

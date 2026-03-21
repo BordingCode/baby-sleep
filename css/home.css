@@ -160,6 +160,14 @@
 }
 
 /* Regression alert */
+[data-theme="dark"] .regression-alert {
+  background: #2E2218;
+  border-color: #8B5A3A;
+}
+
+[data-theme="dark"] .regression-alert-title { color: var(--warning); }
+[data-theme="dark"] .regression-alert-text { color: #D4A882; }
+
 .regression-alert {
   background: #FFF3ED;
   border: 1px solid var(--warning);

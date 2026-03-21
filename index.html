@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="css/tips.css">
   <link rel="stylesheet" href="css/environment.css">
   <link rel="stylesheet" href="css/routines.css">
+  <link rel="stylesheet" href="css/mybaby.css">
 </head>
 <body>
 
@@ -24,6 +25,7 @@
     <div class="container">
       <div class="app-header">
         <h1><span>🌙</span> Baby Sleep Guide</h1>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">☀️</button>
       </div>
 
       <div class="age-selector">
@@ -125,6 +127,50 @@
     </div>
   </div>
 
+  <!-- My Baby Screen -->
+  <div id="screen-mybaby" class="screen">
+    <div class="container">
+      <div class="screen-title">👶 My Baby's Plan</div>
+      <div class="planner-intro">Enter your baby's sleep times to get a personalized plan based on the science for their age.</div>
+
+      <div class="planner-form">
+        <div class="planner-row">
+          <div class="planner-label"><span class="planner-label-icon">🌙</span> Bedtime</div>
+          <div class="planner-input">
+            <input type="time" id="mb-bedtime" value="19:00">
+          </div>
+        </div>
+        <div class="planner-row">
+          <div class="planner-label"><span class="planner-label-icon">🌅</span> Wake up</div>
+          <div class="planner-input">
+            <input type="time" id="mb-waketime" value="07:00">
+          </div>
+        </div>
+        <div class="planner-row">
+          <div class="planner-label"><span class="planner-label-icon">😴</span> Naps</div>
+          <div class="nap-stepper">
+            <button class="nap-stepper-btn" id="mb-nap-minus">−</button>
+            <div class="nap-stepper-value" id="mb-nap-count">2</div>
+            <button class="nap-stepper-btn" id="mb-nap-plus">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mb-nap-times"></div>
+
+      <div id="mb-timeline"></div>
+
+      <div id="mb-checks"></div>
+
+      <div id="mb-suggested"></div>
+
+      <div class="disclaimer">
+        This plan is personalized guidance based on your inputs and pediatric sleep science.<br>
+        Every baby is unique — adjust as needed.
+      </div>
+    </div>
+  </div>
+
   <!-- Tips Screen -->
   <div id="screen-tips" class="screen">
     <div class="container">
@@ -158,6 +204,10 @@
     <button class="nav-btn active" data-screen="schedule">
       <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <span>Schedule</span>
+    </button>
+    <button class="nav-btn" data-screen="mybaby">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      <span>My Baby</span>
     </button>
     <button class="nav-btn" data-screen="tips">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
