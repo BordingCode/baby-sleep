@@ -354,8 +354,17 @@
 
   function initMyBaby() {
     loadMB();
-    if (mb.birthday) $('mb-birthday').value = mb.birthday;
     if (mb.birthday) {
+      $('mb-birthday').value = mb.birthday;
+      const months = getAgeMonths(mb.birthday);
+      const age = ageRangeFor(months);
+      $('mb-age-badge').innerHTML = `<div class="check-card info">
+        <div class="check-icon">👶</div>
+        <div class="check-content">
+          <div class="check-title">${ageLabel(mb.birthday)}</div>
+          <div class="check-detail">Sleep recommendations for: ${age.ageLabel}</div>
+        </div>
+      </div>`;
       showRoutineInputs();
     }
   }
@@ -388,10 +397,60 @@
     let t = wakeMin;
     for (let i = 0; i < count; i++) {
       t += ww;
-      naps.push({ start: m2t(Math.round(t)), duration: Math.min(Math.max(dur, 30), 150) });
-      t += dur;
+      const start = Math.round(t);
+      const d = Math.min(Math.max(dur, 30), 150);
+      naps.push({ start: m2t(start), end: m2t(start + d) });
+      t = start + d;
     }
     return naps;
+  }
+
+  // Recalculate the schedule from a given nap index onward.
+  // When a nap changes, we recompute all later naps using wake windows,
+  // and drop naps that don't fit before bedtime.
+  function recalcFromNap(changedIdx) {
+    const months = getAgeMonths(mb.birthday);
+    const age = ageRangeFor(months);
+    const ww = (age.wakeWindow.min + age.wakeWindow.max) / 2;
+    const bedMin = t2m(mb.bedtime);
+    const totalNapH = (age.napSleepHours.min + age.napSleepHours.max) / 2;
+    const avgNapDur = mb.napCount > 0 ? Math.round(totalNapH * 60 / mb.napCount) : 60;
+
+    // The changed nap's end time is the anchor — recalc everything after it
+    const changedNap = mb.napTimes[changedIdx];
+    let cursor = t2m(changedNap.end);
+
+    // Keep naps up to and including the changed one, rebuild the rest
+    const kept = mb.napTimes.slice(0, changedIdx + 1);
+    const maxNaps = age.naps.max;
+
+    // Try to fit remaining naps
+    for (let i = changedIdx + 1; i < maxNaps; i++) {
+      const nextStart = cursor + ww;
+      const nextEnd = nextStart + avgNapDur;
+
+      // Does this nap fit before bedtime? Need at least ww/2 before bed
+      let timeToBed = bedMin - nextEnd;
+      if (timeToBed < 0) timeToBed += 1440;
+      // If the nap would end less than half a wake window before bed, skip it
+      if (timeToBed < ww * 0.4 || timeToBed > 720) break;
+
+      kept.push({ start: m2t(Math.round(nextStart)), end: m2t(Math.round(nextEnd)) });
+      cursor = nextEnd;
+    }
+
+    mb.napTimes = kept;
+    mb.napCount = kept.length;
+    $('mb-nap-count').textContent = mb.napCount;
+    saveMB();
+    renderNapInputs();
+    renderResults();
+  }
+
+  function napDuration(nap) {
+    let d = t2m(nap.end) - t2m(nap.start);
+    if (d <= 0) d += 1440;
+    return d;
   }
 
   function renderNapInputs() {
@@ -408,11 +467,13 @@
     let html = '<div class="nap-times"><div class="nap-times-title">😴 Nap Times</div>';
     for (let i = 0; i < mb.napCount; i++) {
       const n = mb.napTimes[i];
+      const dur = napDuration(n);
       html += `<div class="nap-time-row">
-        <div class="nap-time-label">Nap ${i + 1}</div>
+        <div class="nap-time-label">Nap ${i + 1}<br><small style="color:var(--text-muted);font-weight:400">${durLabel(dur)}</small></div>
         <div class="nap-time-inputs">
-          <input type="time" value="${n.start}" data-nap="${i}">
-          <span>${durLabel(n.duration)}</span>
+          <input type="time" value="${n.start}" data-nap="${i}" data-field="start">
+          <span style="color:var(--text-muted)">→</span>
+          <input type="time" value="${n.end}" data-nap="${i}" data-field="end">
         </div>
       </div>`;
     }
@@ -421,9 +482,13 @@
 
     el.querySelectorAll('input[type="time"]').forEach(inp => {
       inp.addEventListener('change', () => {
-        mb.napTimes[parseInt(inp.dataset.nap)].start = inp.value;
+        const idx = parseInt(inp.dataset.nap);
+        const field = inp.dataset.field;
+        mb.napTimes[idx][field] = inp.value;
         saveMB();
-        renderResults();
+
+        // If end time changed (or start), recalculate later naps
+        recalcFromNap(idx);
       });
     });
   }
@@ -443,7 +508,7 @@
 
     let actualNapMins = 0;
     const sortedNaps = (mb.napTimes || []).slice().sort((a, b) => t2m(a.start) - t2m(b.start));
-    sortedNaps.forEach(n => { actualNapMins += n.duration; });
+    sortedNaps.forEach(n => { actualNapMins += napDuration(n); });
     const actualNapH = actualNapMins / 60;
     const actualTotalH = actualNightH + actualNapH;
 
@@ -454,7 +519,7 @@
       const s = t2m(n.start);
       let gap = s - prev; if (gap < 0) gap += 1440;
       wws.push({ label: i === 0 ? 'Wake to Nap 1' : 'Nap ' + i + ' to Nap ' + (i + 1), mins: gap });
-      prev = s + n.duration;
+      prev = t2m(n.end);
     });
     let lastGap = bedMin - prev; if (lastGap < 0) lastGap += 1440;
     wws.push({ label: mb.napCount > 0 ? 'Last nap to Bedtime' : 'Wake to Bedtime', mins: lastGap });
@@ -472,7 +537,7 @@
     const blocks = [];
     blocks.push({ type: 'night', start: bedMin, duration: actualNight, label: 'Night' });
     sortedNaps.forEach((n, i) => {
-      blocks.push({ type: 'nap', start: t2m(n.start), duration: n.duration, label: 'Nap ' + (i + 1) });
+      blocks.push({ type: 'nap', start: t2m(n.start), duration: napDuration(n), label: 'Nap ' + (i + 1) });
     });
 
     let tlHtml = '<div class="timeline-section"><div class="timeline-title">Your Baby\'s Day</div>';
@@ -686,17 +751,18 @@
   }
 
   // Event listeners
-  $('mb-birthday').addEventListener('input', function() {
-    mb.birthday = this.value;
+  function onBirthdayChange() {
+    const val = $('mb-birthday').value;
+    mb.birthday = val;
     saveMB();
-    if (this.value) {
-      const months = getAgeMonths(this.value);
+    if (val) {
+      const months = getAgeMonths(val);
       const age = ageRangeFor(months);
 
       $('mb-age-badge').innerHTML = `<div class="check-card info">
         <div class="check-icon">👶</div>
         <div class="check-content">
-          <div class="check-title">${ageLabel(this.value)}</div>
+          <div class="check-title">${ageLabel(val)}</div>
           <div class="check-detail">Sleep recommendations for: ${age.ageLabel}</div>
         </div>
       </div>`;
@@ -715,7 +781,9 @@
       $('mb-comparison').innerHTML = '';
       $('mb-advice').innerHTML = '';
     }
-  });
+  }
+  $('mb-birthday').addEventListener('input', onBirthdayChange);
+  $('mb-birthday').addEventListener('change', onBirthdayChange);
 
   $('mb-bedtime').addEventListener('change', function() {
     mb.bedtime = this.value;
