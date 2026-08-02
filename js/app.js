@@ -133,6 +133,7 @@
 
     const html = data.troubleshooting.map(tip => {
       const relevant = midAge >= tip.ageRelevance[0] && midAge <= tip.ageRelevance[1];
+      const predictFirst = tip.id === 'early-waking';
       return `
         <div class="tip-card${relevant ? ' relevant' : ''}" onclick="this.classList.toggle('open')">
           <div class="tip-header">
@@ -143,20 +144,47 @@
           </div>
           <div class="tip-body">
             <div class="tip-content">
+              ${predictFirst ? `
+              <div class="predict-gate">
+                <div class="predict-question">Gæt først: hjælper en <b>senere</b> sengetid babyen med at sove længere om morgenen?</div>
+                <div class="predict-btns">
+                  <button class="predict-btn" data-guess="yes">Ja, senere sengetid giver mere søvn</button>
+                  <button class="predict-btn" data-guess="no">Nej, det giver tidligere opvågnen</button>
+                </div>
+                <div class="predict-feedback"></div>
+              </div>
+              <div class="predict-locked">` : ''}
               <div class="tip-section-label">Common causes</div>
               <ul class="tip-list causes">
-                ${tip.causes.map(c => '<li>' + c + '</li>').join('')}
+                ${tip.causes.map((c, i) => predictFirst && i === 0 ? `<li class="cause-highlight">${c}</li>` : '<li>' + c + '</li>').join('')}
               </ul>
               <div class="tip-section-label">What to try</div>
               <ul class="tip-list solutions">
                 ${tip.solutions.map(s => '<li>' + s + '</li>').join('')}
               </ul>
+              ${predictFirst ? `</div>` : ''}
             </div>
           </div>
         </div>`;
     }).join('');
 
     container.innerHTML = html;
+
+    container.querySelectorAll('.predict-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const gate = btn.closest('.predict-gate');
+        const locked = gate.parentElement.querySelector('.predict-locked');
+        const correct = btn.dataset.guess === 'no';
+        gate.querySelectorAll('.predict-btn').forEach(b => (b.disabled = true));
+        gate.classList.add('answered');
+        btn.classList.add(correct ? 'correct' : 'incorrect');
+        gate.querySelector('.predict-feedback').innerHTML = correct
+          ? '✅ Rigtigt gættet. En for sen sengetid gør babyen overtræt — kortisolniveauet stiger, og det sætter kroppens vågne-drive tidligere i gang, ikke senere.'
+          : '❌ Faktisk omvendt: en for sen sengetid gør babyen overtræt — kortisolniveauet stiger, og det sætter kroppens vågne-drive tidligere i gang, ikke senere.';
+        locked.classList.add('revealed');
+      });
+    });
   }
 
   // --- Environment Screen ---
