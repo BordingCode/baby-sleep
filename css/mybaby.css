@@ -336,6 +336,7 @@
 .check-card.good { border-left: 3px solid var(--success); }
 .check-card.warn { border-left: 3px solid var(--warning); }
 .check-card.info { border-left: 3px solid var(--primary-light); }
+.check-card.trend { border-left: 3px solid var(--primary); }
 
 /* Suggested schedule */
 .suggested-section {

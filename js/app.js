@@ -316,7 +316,7 @@
   }
 
   // --- My Baby Planner ---
-  let mb = { birthday: '', bedtime: '19:00', waketime: '07:00', napCount: 2, napTimes: [] };
+  let mb = { birthday: '', bedtime: '19:00', waketime: '07:00', napCount: 2, napTimes: [], history: [] };
 
   function getAgeMonths(birthday) {
     const today = new Date();
@@ -384,6 +384,44 @@
       const s = localStorage.getItem('bs_mybaby');
       if (s) mb = { ...mb, ...JSON.parse(s) };
     } catch(e) {}
+    if (!Array.isArray(mb.history)) mb.history = [];
+  }
+
+  // Keep at most one entry per calendar day (the latest edit that day wins),
+  // so a run of edits in one sitting doesn't look like several visits.
+  function recordHistory(snapshot) {
+    const today = new Date().toISOString().slice(0, 10);
+    const entry = { date: today, ...snapshot };
+    if (mb.history.length && mb.history[mb.history.length - 1].date === today) {
+      mb.history[mb.history.length - 1] = entry;
+    } else {
+      mb.history.push(entry);
+      if (mb.history.length > 10) mb.history.shift();
+    }
+    saveMB();
+  }
+
+  // A pattern needs 3 consecutive visits moving the same way before we name it —
+  // one odd night is noise, three in a row is a trend worth interrupting for.
+  function detectTrend(history) {
+    if (history.length < 3) return null;
+    const last3 = history.slice(-3);
+
+    const bed = last3.map(h => h.bedMin);
+    const bedStep1 = bed[1] - bed[0], bedStep2 = bed[2] - bed[1];
+    if (bedStep1 !== 0 && Math.sign(bedStep1) === Math.sign(bedStep2) && Math.abs(bed[2] - bed[0]) >= 20) {
+      const dir = bed[2] > bed[0] ? 'later' : 'earlier';
+      return `Bedtime has crept ${durLabel(Math.abs(bed[2] - bed[0]))} ${dir} over the last 3 visits.`;
+    }
+
+    const night = last3.map(h => h.nightH);
+    const nightStep1 = night[1] - night[0], nightStep2 = night[2] - night[1];
+    if (nightStep1 !== 0 && Math.sign(nightStep1) === Math.sign(nightStep2) && Math.abs(night[2] - night[0]) >= 0.5) {
+      const dir = night[2] > night[0] ? 'up' : 'down';
+      return `Night sleep is trending ${dir} over the last 3 visits (${night[0].toFixed(1)}h → ${night[2].toFixed(1)}h).`;
+    }
+
+    return null;
   }
 
   function initMyBaby() {
@@ -820,6 +858,8 @@
     const recNightH = recNightMins / 60;
     const recTotalH = (age.totalSleepHours.min + age.totalSleepHours.max) / 2;
 
+    recordHistory({ bedMin, nightH: actualNightH, totalH: actualTotalH, napH: actualNapH });
+
     // --- Circular Clock ---
     renderClock(bedMin, wakeMin, sortedNaps, actualTotalH, actualNightH, actualNapH);
 
@@ -838,20 +878,22 @@
     }
 
     // --- Comparison cards ---
-    cHtml += '<div class="checks-section">';
+    // Every goal still gets checked, but only real deviations get their own
+    // card — the ones on track collapse into a single count, so a good week
+    // doesn't read as loud as a bad one.
+    const results = [];
 
-    // Compare helper
     function cmp(title, actual, unit, recMin, recMax, lowTip, highTip) {
       const ok = actual >= recMin - 0.3 && actual <= recMax + 0.3;
       const low = actual < recMin - 0.3;
       const val = typeof actual === 'number' ? actual.toFixed(1) : actual;
-      cHtml += `<div class="check-card ${ok ? 'good' : 'warn'}">
-        <div class="check-icon">${ok ? '✅' : '⚠️'}</div>
+      results.push({ ok, html: `<div class="check-card warn">
+        <div class="check-icon">⚠️</div>
         <div class="check-content">
           <div class="check-title">${title}: ${val} ${unit}</div>
-          <div class="check-detail">Recommended: ${recMin}–${recMax} ${unit}. ${ok ? 'On track!' : low ? lowTip : highTip}</div>
+          <div class="check-detail">Recommended: ${recMin}–${recMax} ${unit}. ${low ? lowTip : highTip}</div>
         </div>
-      </div>`;
+      </div>` });
     }
 
     cmp('Night sleep', actualNightH, 'hours',
@@ -876,15 +918,15 @@
 
     // Nap count
     const napOk = mb.napCount >= age.naps.min && mb.napCount <= age.naps.max;
-    cHtml += `<div class="check-card ${napOk ? 'good' : 'warn'}">
-      <div class="check-icon">${napOk ? '✅' : '⚠️'}</div>
+    results.push({ ok: napOk, html: `<div class="check-card warn">
+      <div class="check-icon">⚠️</div>
       <div class="check-content">
         <div class="check-title">Naps: ${mb.napCount}</div>
-        <div class="check-detail">Recommended: ${age.naps.label}. ${napOk ? 'Right on track!' :
+        <div class="check-detail">Recommended: ${age.naps.label}. ${
           mb.napCount < age.naps.min ? 'Your baby may need more naps — watch for overtiredness signs (fussiness, yawning).' :
           'Your baby might be ready to drop a nap. Signs: fighting a nap for 2+ weeks, or last nap pushes bedtime too late.'}</div>
       </div>
-    </div>`;
+    </div>` });
 
     // Wake windows — compare each against the correct graduated window
     const totalWWs = wws.length;
@@ -894,16 +936,39 @@
       const ok = ww.mins >= expectedWW - tolerance && ww.mins <= expectedWW + tolerance;
       const short = ww.mins < expectedWW - tolerance;
       const posLabel = idx === 0 ? 'first (shortest)' : idx === totalWWs - 1 ? 'last (longest)' : 'middle';
-      cHtml += `<div class="check-card ${ok ? 'good' : 'warn'}">
-        <div class="check-icon">${ok ? '✅' : '⚠️'}</div>
+      results.push({ ok, html: `<div class="check-card warn">
+        <div class="check-icon">⚠️</div>
         <div class="check-content">
           <div class="check-title">${ww.label}: ${durLabel(ww.mins)}</div>
-          <div class="check-detail">Recommended ${posLabel} wake window: ~${durLabel(expectedWW)}. ${ok ? 'Good spacing!' :
+          <div class="check-detail">Recommended ${posLabel} wake window: ~${durLabel(expectedWW)}. ${
             short ? 'Too short — baby may not have enough sleep pressure built up. Try stretching by 10–15 min.' :
             'Too long — cortisol may kick in from overtiredness, making sleep harder. Try putting down 15–30 min earlier.'}</div>
         </div>
-      </div>`;
+      </div>` });
     });
+
+    cHtml += '<div class="checks-section">';
+
+    const trend = detectTrend(mb.history);
+    if (trend) {
+      cHtml += `<div class="check-card trend">
+        <div class="check-icon">${trend.includes('later') || trend.includes('trending up') ? '📈' : '📉'}</div>
+        <div class="check-content">
+          <div class="check-title">Trend</div>
+          <div class="check-detail">${trend}</div>
+        </div>
+      </div>`;
+    }
+
+    const goodCount = results.filter(r => r.ok).length;
+    cHtml += `<div class="check-card good">
+      <div class="check-icon">✅</div>
+      <div class="check-content">
+        <div class="check-title">${goodCount} of ${results.length} goals on track</div>
+      </div>
+    </div>`;
+
+    results.filter(r => !r.ok).forEach(r => { cHtml += r.html; });
 
     cHtml += '</div>';
     $('mb-comparison').innerHTML = cHtml;
