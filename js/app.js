@@ -146,10 +146,10 @@
             <div class="tip-content">
               ${predictFirst ? `
               <div class="predict-gate">
-                <div class="predict-question">Gæt først: hjælper en <b>senere</b> sengetid babyen med at sove længere om morgenen?</div>
+                <div class="predict-question">Guess first: does a <b>later</b> bedtime help baby sleep longer in the morning?</div>
                 <div class="predict-btns">
-                  <button class="predict-btn" data-guess="yes">Ja, senere sengetid giver mere søvn</button>
-                  <button class="predict-btn" data-guess="no">Nej, det giver tidligere opvågnen</button>
+                  <button class="predict-btn" data-guess="yes">Yes, a later bedtime means more sleep</button>
+                  <button class="predict-btn" data-guess="no">No, it means an earlier wake-up</button>
                 </div>
                 <div class="predict-feedback"></div>
               </div>
@@ -180,8 +180,8 @@
         gate.classList.add('answered');
         btn.classList.add(correct ? 'correct' : 'incorrect');
         gate.querySelector('.predict-feedback').innerHTML = correct
-          ? '✅ Rigtigt gættet. En for sen sengetid gør babyen overtræt — kortisolniveauet stiger, og det sætter kroppens vågne-drive tidligere i gang, ikke senere.'
-          : '❌ Faktisk omvendt: en for sen sengetid gør babyen overtræt — kortisolniveauet stiger, og det sætter kroppens vågne-drive tidligere i gang, ikke senere.';
+          ? '✅ Correct guess. A too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.'
+          : '❌ Actually the opposite: a too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.';
         locked.classList.add('revealed');
       });
     });
