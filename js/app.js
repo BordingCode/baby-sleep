@@ -160,8 +160,13 @@
               </ul>
               <div class="tip-section-label">What to try</div>
               <ul class="tip-list solutions">
-                ${tip.solutions.map(s => '<li>' + s + '</li>').join('')}
+                <li class="solution-start"><span class="solution-start-label">Try this first</span>${tip.solutions[0]}</li>
               </ul>
+              ${tip.solutions.length > 1 ? `
+              <button class="solutions-more-toggle" type="button">If that doesn't help, also try (${tip.solutions.length - 1})</button>
+              <ul class="tip-list solutions solutions-more">
+                ${tip.solutions.slice(1).map(s => '<li>' + s + '</li>').join('')}
+              </ul>` : ''}
               ${predictFirst ? `</div>` : ''}
             </div>
           </div>
@@ -169,6 +174,15 @@
     }).join('');
 
     container.innerHTML = html;
+
+    container.querySelectorAll('.solutions-more-toggle').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const list = btn.nextElementSibling;
+        const open = list.classList.toggle('expanded');
+        btn.classList.toggle('expanded', open);
+      });
+    });
 
     container.querySelectorAll('.predict-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
