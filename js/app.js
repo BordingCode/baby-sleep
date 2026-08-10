@@ -1049,15 +1049,10 @@
       }
     });
 
-    // Regression warning
+    // Regression warning — kept out of the routine `tips` list on purpose (see
+    // the "Advice cards" block below): it's a turning point, not a checklist
+    // item, and should read as one.
     const regression = findRegression(age);
-    if (regression) {
-      tips.push({
-        icon: '🔄',
-        title: regression.label,
-        text: regression.description + ' This typically lasts ' + regression.duration + '. Stay consistent with your routine — it will pass.'
-      });
-    }
 
     // Build suggested optimal schedule using graduated wake windows
     const optWake = recWake;
@@ -1080,8 +1075,14 @@
     sugHtml += '</div>';
 
     // Advice cards
-    if (tips.length > 0) {
+    if (regression || tips.length > 0) {
       advHtml += '<div class="suggested-section"><div class="suggested-title">How to Optimize</div>';
+      if (regression) {
+        advHtml += `<div class="regression-alert visible" style="margin-bottom:12px">
+          <div class="regression-alert-title"><span>⚠️</span><span>${regression.label}</span></div>
+          <div class="regression-alert-text">${regression.description} This typically lasts ${regression.duration}. Stay consistent with your routine — it will pass.</div>
+        </div>`;
+      }
       tips.forEach(tip => {
         advHtml += `<div class="check-card warn" style="border-left-color:var(--primary)">
           <div class="check-icon">${tip.icon}</div>
