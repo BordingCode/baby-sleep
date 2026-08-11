@@ -760,13 +760,13 @@
       const dur = napDuration(n);
       if (dur >= 25) {
         const p = polar(minToAngle(t2m(n.start) + dur / 2), (R + r) / 2);
-        svg += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="600" fill="white" pointer-events="none">N${i + 1}</text>`;
+        svg += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="600" fill="white" stroke="rgba(0,0,0,.45)" stroke-width="3" paint-order="stroke" pointer-events="none">N${i + 1}</text>`;
       }
     });
 
     // Night label
     const nightMid = polar(minToAngle(bedMin + nightDur / 2), (R + r) / 2);
-    svg += `<text x="${nightMid.x}" y="${nightMid.y}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="white" pointer-events="none">Night</text>`;
+    svg += `<text x="${nightMid.x}" y="${nightMid.y}" text-anchor="middle" dominant-baseline="central" font-size="10" font-weight="600" fill="white" stroke="rgba(0,0,0,.45)" stroke-width="3" paint-order="stroke" pointer-events="none">Night</text>`;
 
     svg += '</svg>';
 
