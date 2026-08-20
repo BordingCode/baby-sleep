@@ -417,9 +417,15 @@
 
   // A pattern needs 3 consecutive visits moving the same way before we name it —
   // one odd night is noise, three in a row is a trend worth interrupting for.
+  // But "3 visits" only means something if they're close together: 3 check-ins
+  // spread over a season aren't a trend, they're just how babies change.
+  const TREND_MAX_SPAN_DAYS = 14;
   function detectTrend(history) {
     if (history.length < 3) return null;
     const last3 = history.slice(-3);
+
+    const spanDays = (new Date(last3[2].date) - new Date(last3[0].date)) / 86400000;
+    if (spanDays > TREND_MAX_SPAN_DAYS) return null;
 
     const bed = last3.map(h => h.bedMin);
     const bedStep1 = bed[1] - bed[0], bedStep2 = bed[2] - bed[1];
