@@ -189,14 +189,24 @@
         e.stopPropagation();
         const gate = btn.closest('.predict-gate');
         const locked = gate.parentElement.querySelector('.predict-locked');
+        const feedback = gate.querySelector('.predict-feedback');
         const correct = btn.dataset.guess === 'no';
+
+        // Beat 1: the guess lands — button colour changes, nothing else yet.
         gate.querySelectorAll('.predict-btn').forEach(b => (b.disabled = true));
         gate.classList.add('answered');
         btn.classList.add(correct ? 'correct' : 'incorrect');
-        gate.querySelector('.predict-feedback').innerHTML = correct
-          ? '✅ Correct guess. A too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.'
-          : '❌ Actually the opposite: a too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.';
-        locked.classList.add('revealed');
+
+        // Beat 2: after a short pause, the reveal — let the guess register
+        // as its own moment before the answer and the cause list arrive.
+        setTimeout(() => {
+          feedback.innerHTML = correct
+            ? '✅ Correct guess. A too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.'
+            : '❌ Actually the opposite: a too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.';
+          feedback.classList.add('shown');
+          locked.classList.add('revealed');
+          requestAnimationFrame(() => requestAnimationFrame(() => locked.classList.add('fade-in')));
+        }, 600);
       });
     });
   }

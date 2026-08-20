@@ -181,14 +181,26 @@
   font-size: 13px;
   line-height: 1.5;
   color: var(--text);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.predict-feedback.shown {
+  opacity: 1;
 }
 
 .predict-locked {
   display: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
 }
 
 .predict-locked.revealed {
   display: block;
+}
+
+.predict-locked.revealed.fade-in {
+  opacity: 1;
 }
 
 .cause-highlight {
