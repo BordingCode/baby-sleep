@@ -125,6 +125,40 @@
     return null;
   }
 
+  // Week-precise regression status for a real baby (My Baby screen). Unlike
+  // findRegression() above — which just says "a regression exists somewhere
+  // near this age bracket" for the generic By-Age browser — this tells you
+  // whether a specific regression is still ahead, actively happening, or
+  // already over, using the baby's real birthday instead of a 1–3 month
+  // bracket. A regression's "active" window is its own nominal age ± half
+  // its typical duration (e.g. the 4-month regression's 2–6 week duration
+  // gives a ±3 week window), so the same warning can't linger for months.
+  const REGRESSION_UPCOMING_WEEKS = 8; // how far ahead we'll say "coming up"
+  function parseWeeksRange(duration) {
+    const nums = (String(duration).match(/\d+/g) || []).map(Number);
+    if (!nums.length) return { min: 2, max: 4 };
+    return nums.length === 1 ? { min: nums[0], max: nums[0] } : { min: nums[0], max: nums[1] };
+  }
+  function findRegressionStatus(birthday) {
+    const ageWeeks = getAgeWeeks(birthday);
+    let upcoming = null;
+    for (const reg of data.regressions) {
+      const nominalWeeks = reg.ageMonths * 52 / 12;
+      const half = parseWeeksRange(reg.duration).max / 2;
+      const activeStart = nominalWeeks - half, activeEnd = nominalWeeks + half;
+      if (ageWeeks >= activeStart && ageWeeks <= activeEnd) {
+        return { regression: reg, status: 'active' };
+      }
+      if (ageWeeks < activeStart) {
+        const weeksUntil = Math.round(activeStart - ageWeeks);
+        if (weeksUntil <= REGRESSION_UPCOMING_WEEKS && (!upcoming || weeksUntil < upcoming.weeksUntil)) {
+          upcoming = { regression: reg, status: 'upcoming', weeksUntil };
+        }
+      }
+    }
+    return upcoming;
+  }
+
   // --- Tips Screen ---
   function renderTips() {
     const container = $('tips-list');
@@ -1096,7 +1130,7 @@
     // Regression warning — kept out of the routine `tips` list on purpose (see
     // the "Advice cards" block below): it's a turning point, not a checklist
     // item, and should read as one.
-    const regression = findRegression(age);
+    const regStatus = findRegressionStatus(mb.birthday);
 
     // Build suggested optimal schedule using graduated wake windows
     const optWake = recWake;
@@ -1119,12 +1153,23 @@
     sugHtml += '</div>';
 
     // Advice cards
-    if (regression || tips.length > 0) {
+    if (regStatus || tips.length > 0) {
       advHtml += '<div class="suggested-section"><div class="suggested-title">How to Optimize</div>';
-      if (regression) {
+      if (regStatus && regStatus.status === 'active') {
+        const regression = regStatus.regression;
         advHtml += `<div class="regression-alert visible" style="margin-bottom:12px">
           <div class="regression-alert-title"><span>⚠️</span><span>${regression.label}</span></div>
           <div class="regression-alert-text">${regression.description} This typically lasts ${regression.duration}. Stay consistent with your routine — it will pass.</div>
+        </div>`;
+      } else if (regStatus && regStatus.status === 'upcoming') {
+        const regression = regStatus.regression;
+        const wk = regStatus.weeksUntil;
+        advHtml += `<div class="check-card info" style="margin-bottom:12px">
+          <div class="check-icon">🌱</div>
+          <div class="check-content">
+            <div class="check-title">In about ${wk} week${wk === 1 ? '' : 's'}: ${regression.label}</div>
+            <div class="check-detail">${regression.tips[0]}</div>
+          </div>
         </div>`;
       }
       tips.forEach(tip => {
