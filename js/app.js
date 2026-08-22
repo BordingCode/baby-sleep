@@ -775,9 +775,16 @@
     // Night arc — tappable
     svg += `<path d="${arcPath(bedMin, nightDur)}" fill="var(--sleep-night)" opacity="0.9" class="clock-arc" data-type="night"/>`;
 
-    // Nap arcs — tappable
+    // Nap arcs — tappable. A short catnap (the app's own copy calls out
+    // 20-30 min ones) renders as a sliver too thin to reliably tap, so give
+    // every nap arc a minimum visual width, expanded evenly around its real
+    // midpoint — the underlying start/end time is never changed, only the shape.
+    const NAP_MIN_VISUAL_DUR = 40;
     naps.forEach((n, i) => {
-      svg += `<path d="${arcPath(t2m(n.start), napDuration(n))}" fill="var(--sleep-nap)" opacity="0.85" class="clock-arc" data-type="nap" data-idx="${i}"/>`;
+      const realStart = t2m(n.start), realDur = napDuration(n);
+      const visDur = Math.max(realDur, NAP_MIN_VISUAL_DUR);
+      const visStart = realStart - (visDur - realDur) / 2;
+      svg += `<path d="${arcPath(visStart, visDur)}" fill="var(--sleep-nap)" opacity="0.85" class="clock-arc" data-type="nap" data-idx="${i}"/>`;
     });
 
     // Hour ticks
@@ -795,7 +802,7 @@
     // Nap labels
     naps.forEach((n, i) => {
       const dur = napDuration(n);
-      if (dur >= 25) {
+      if (dur >= 10) {
         const p = polar(minToAngle(t2m(n.start) + dur / 2), (R + r) / 2);
         svg += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="600" fill="white" stroke="rgba(0,0,0,.45)" stroke-width="3" paint-order="stroke" pointer-events="none">N${i + 1}</text>`;
       }

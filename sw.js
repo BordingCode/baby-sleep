@@ -1,4 +1,4 @@
-const CACHE = 'baby-sleep-v20';
+const CACHE = 'baby-sleep-v21';
 const ASSETS = [
   './',
   './index.html',
