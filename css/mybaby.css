@@ -201,6 +201,10 @@
   transform: translateY(0);
 }
 
+.clock-edit-popup.no-anim {
+  transition: none;
+}
+
 .clock-edit-title {
   font-size: 15px;
   font-weight: 700;

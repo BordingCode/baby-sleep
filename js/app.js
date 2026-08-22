@@ -643,7 +643,8 @@
     clockEditOpen = null;
   }
 
-  function showClockEdit(type, idx) {
+  function showClockEdit(type, idx, opts) {
+    opts = opts || {};
     // If same popup is already open, close it
     if (clockEditOpen && clockEditOpen.type === type && clockEditOpen.idx === idx) {
       closeClockEdit();
@@ -683,7 +684,14 @@
 
     container.innerHTML = '';
     container.appendChild(popup);
-    requestAnimationFrame(() => popup.classList.add('visible'));
+    if (opts.instant) {
+      // Same popup, just updated by the field the user is still typing in —
+      // skip the fade-in so it reads as one continuous edit, not a blink.
+      popup.classList.add('visible', 'no-anim');
+      requestAnimationFrame(() => popup.classList.remove('no-anim'));
+    } else {
+      requestAnimationFrame(() => popup.classList.add('visible'));
+    }
 
     popup.querySelectorAll('input').forEach(inp => {
       inp.addEventListener('change', () => {
@@ -697,9 +705,12 @@
           saveMB();
           renderNapInputs();
           renderResults();
-          // Re-open same popup after re-render
+          // Re-open same popup after re-render, without the fade blink, and
+          // hand focus back so the next field is one uninterrupted edit.
           clockEditOpen = null;
-          showClockEdit(reopenType, reopenIdx);
+          showClockEdit(reopenType, reopenIdx, { instant: true });
+          const wt = container.querySelector('[data-field="waketime"]');
+          if (wt) wt.focus();
         } else if (field === 'waketime') {
           mb.waketime = inp.value;
           $('mb-waketime').value = inp.value;
@@ -707,7 +718,9 @@
           renderNapInputs();
           renderResults();
           clockEditOpen = null;
-          showClockEdit(reopenType, reopenIdx);
+          showClockEdit(reopenType, reopenIdx, { instant: true });
+          const bt = container.querySelector('[data-field="bedtime"]');
+          if (bt) bt.focus();
         } else if (field === 'nap-start') {
           const i = parseInt(inp.dataset.idx);
           mb.napTimes[i].start = inp.value;
@@ -715,14 +728,22 @@
           recalcFromNap(i);
           // Re-open if nap still exists
           clockEditOpen = null;
-          if (mb.napTimes[i]) showClockEdit('nap', i);
+          if (mb.napTimes[i]) {
+            showClockEdit('nap', i, { instant: true });
+            const ne = container.querySelector('[data-field="nap-end"]');
+            if (ne) ne.focus();
+          }
         } else if (field === 'nap-end') {
           const i = parseInt(inp.dataset.idx);
           mb.napTimes[i].end = inp.value;
           saveMB();
           recalcFromNap(i);
           clockEditOpen = null;
-          if (mb.napTimes[i]) showClockEdit('nap', i);
+          if (mb.napTimes[i]) {
+            showClockEdit('nap', i, { instant: true });
+            const ns = container.querySelector('[data-field="nap-start"]');
+            if (ns) ns.focus();
+          }
         }
       });
     });
