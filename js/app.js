@@ -167,9 +167,9 @@
 
     const html = data.troubleshooting.map(tip => {
       const relevant = midAge >= tip.ageRelevance[0] && midAge <= tip.ageRelevance[1];
-      const predictFirst = tip.id === 'early-waking';
+      const predictFirst = !!tip.predict;
       return `
-        <div class="tip-card${relevant ? ' relevant' : ''}" onclick="this.classList.toggle('open')">
+        <div class="tip-card${relevant ? ' relevant' : ''}" data-tip="${tip.id}" onclick="this.classList.toggle('open')">
           <div class="tip-header">
             <div class="tip-icon">${tip.icon}</div>
             <div class="tip-title">${tip.title}</div>
@@ -180,10 +180,9 @@
             <div class="tip-content">
               ${predictFirst ? `
               <div class="predict-gate">
-                <div class="predict-question">Guess first: does a <b>later</b> bedtime help baby sleep longer in the morning?</div>
+                <div class="predict-question">${tip.predict.question}</div>
                 <div class="predict-btns">
-                  <button class="predict-btn" data-guess="yes">Yes, a later bedtime means more sleep</button>
-                  <button class="predict-btn" data-guess="no">No, it means an earlier wake-up</button>
+                  ${tip.predict.options.map(o => `<button class="predict-btn" data-guess="${o.guess}">${o.label}</button>`).join('')}
                 </div>
                 <div class="predict-feedback"></div>
               </div>
@@ -219,12 +218,13 @@
     });
 
     container.querySelectorAll('.predict-btn').forEach(btn => {
+      const predict = data.troubleshooting.find(t => t.id === btn.closest('.tip-card').dataset.tip).predict;
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const gate = btn.closest('.predict-gate');
         const locked = gate.parentElement.querySelector('.predict-locked');
         const feedback = gate.querySelector('.predict-feedback');
-        const correct = btn.dataset.guess === 'no';
+        const correct = btn.dataset.guess === predict.correct;
 
         // Beat 1: the guess lands — button colour changes, nothing else yet.
         gate.querySelectorAll('.predict-btn').forEach(b => (b.disabled = true));
@@ -235,8 +235,8 @@
         // as its own moment before the answer and the cause list arrive.
         setTimeout(() => {
           feedback.innerHTML = correct
-            ? '✅ Correct guess. A too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.'
-            : '❌ Actually the opposite: a too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.';
+            ? '✅ Correct guess. ' + predict.explanation.charAt(0).toUpperCase() + predict.explanation.slice(1)
+            : '❌ Not quite: ' + predict.explanation;
           feedback.classList.add('shown');
           locked.classList.add('revealed');
           requestAnimationFrame(() => requestAnimationFrame(() => locked.classList.add('fade-in')));

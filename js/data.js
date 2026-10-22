@@ -354,6 +354,15 @@ const SLEEP_DATA = {
       title: 'Early Morning Waking',
       icon: '🌅',
       ageRelevance: [3, 36],
+      predict: {
+        question: 'Guess first: does a <b>later</b> bedtime help baby sleep longer in the morning?',
+        options: [
+          { guess: 'yes', label: 'Yes, a later bedtime means more sleep' },
+          { guess: 'no', label: 'No, it means an earlier wake-up' }
+        ],
+        correct: 'no',
+        explanation: 'a too-late bedtime overtires baby — cortisol rises, which kicks the body\'s wake drive in earlier, not later.'
+      },
       causes: [
         'Bedtime too late (counterintuitively, this causes early waking)',
         'Too much daytime sleep',
@@ -394,6 +403,15 @@ const SLEEP_DATA = {
       title: 'Short Naps (Under 45 min)',
       icon: '⏱️',
       ageRelevance: [0, 18],
+      predict: {
+        question: 'Guess first: a 3-month-old takes 20–30 minute naps. Is that a problem?',
+        options: [
+          { guess: 'yes', label: 'Yes, naps that short mean something is wrong' },
+          { guess: 'no', label: 'No, it is normal at this age' }
+        ],
+        correct: 'no',
+        explanation: 'under 5 months, short naps are developmentally normal — a sleep cycle is only 30–45 minutes, and naps lengthen with age.'
+      },
       causes: [
         'Normal for babies under 5 months (sleep cycles are 30–45 min)',
         'Wake window too short (not tired enough for deep sleep)',
