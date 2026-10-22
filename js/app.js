@@ -51,6 +51,28 @@
     });
   });
 
+  // Cross-tab links: any [data-goto] element jumps to that tab; an optional
+  // data-open opens a specific tip card there. Capture phase so a link inside
+  // a tip card doesn't also toggle the card.
+  function goToTab(screen, openTip) {
+    const btn = document.querySelector('.nav-btn[data-screen="' + screen + '"]');
+    if (!btn) return;
+    btn.click();
+    if (openTip) {
+      const card = document.querySelector('.tip-card[data-tip="' + openTip + '"]');
+      if (card) {
+        card.classList.add('open');
+        card.scrollIntoView({ block: 'start' });
+      }
+    }
+  }
+  document.addEventListener('click', e => {
+    const link = e.target.closest('[data-goto]');
+    if (!link) return;
+    e.stopPropagation();
+    goToTab(link.dataset.goto, link.dataset.open);
+  }, true);
+
   // --- Age Slider ---
   const slider = $('age-slider');
 
@@ -1160,6 +1182,7 @@
         advHtml += `<div class="regression-alert visible" style="margin-bottom:12px">
           <div class="regression-alert-title"><span>⚠️</span><span>${regression.label}</span></div>
           <div class="regression-alert-text">${regression.description} This typically lasts ${regression.duration}. Stay consistent with your routine — it will pass.</div>
+          <button type="button" class="tab-link" data-goto="tips" data-open="regressions">See advice →</button>
         </div>`;
       } else if (regStatus && regStatus.status === 'upcoming') {
         const regression = regStatus.regression;

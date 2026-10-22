@@ -248,3 +248,18 @@ html, body {
   background: var(--surface-alt);
   border-radius: 2px;
 }
+
+/* Cross-tab link buttons: inherit the surrounding text colour (no new colours to check in dark mode) */
+.tab-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 6px 0 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline-block;
+}
+.tip-list .tab-link { margin: 0; }

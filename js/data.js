@@ -463,7 +463,7 @@ const SLEEP_DATA = {
         'Offer extra comfort during the day',
         'Don\'t start new sleep habits you\'ll need to undo later',
         'Regressions are temporary — most last 2–6 weeks',
-        'See the Schedule tab for regression details at specific ages'
+        'See the <button type="button" class="tab-link" data-goto="schedule">By Age tab</button> for regression details at specific ages'
       ]
     },
     {
