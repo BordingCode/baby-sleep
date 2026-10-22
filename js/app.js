@@ -486,6 +486,22 @@
   // But "3 visits" only means something if they're close together: 3 check-ins
   // spread over a season aren't a trend, they're just how babies change.
   const TREND_MAX_SPAN_DAYS = 14;
+  // One dot per saved visit, height = bedtime (later = higher), so the whole
+  // run is visible instead of only the one-sentence summary.
+  function bedtimeSparkline(history) {
+    const w = 200, h = 36, pad = 5;
+    const vals = history.map(x => x.bedMin);
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    const span = Math.max(hi - lo, 30);
+    const pts = vals.map((v, i) => [
+      pad + (history.length === 1 ? 0 : i * (w - 2 * pad) / (history.length - 1)),
+      h - pad - ((v - lo) / span) * (h - 2 * pad)
+    ]);
+    const line = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+    const dots = pts.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="var(--primary)"><title>${history[i].date}: ${m2t(vals[i])}</title></circle>`).join('');
+    return `<svg class="bedtime-spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Bedtime over the last ${history.length} visits, from ${m2t(vals[0])} to ${m2t(vals[vals.length - 1])}"><polyline points="${line}" fill="none" stroke="var(--primary)" stroke-width="1.5" opacity="0.5"/>${dots}</svg>`;
+  }
+
   function detectTrend(history) {
     if (history.length < 3) return null;
     const last3 = history.slice(-3);
@@ -1070,6 +1086,17 @@
         <div class="check-content">
           <div class="check-title">Trend</div>
           <div class="check-detail">${trend}</div>
+        </div>
+      </div>`;
+    }
+
+    if (mb.history.length >= 2) {
+      cHtml += `<div class="check-card info">
+        <div class="check-icon">🕐</div>
+        <div class="check-content">
+          <div class="check-title">Bedtime, last ${mb.history.length} visits</div>
+          ${bedtimeSparkline(mb.history)}
+          <div class="check-detail">${m2t(mb.history[0].bedMin)} → ${m2t(mb.history[mb.history.length - 1].bedMin)}</div>
         </div>
       </div>`;
     }
