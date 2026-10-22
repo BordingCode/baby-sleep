@@ -1206,10 +1206,31 @@
     $('mb-advice').innerHTML = advHtml;
   }
 
+  function todayISO() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  $('mb-birthday').max = todayISO();
+
   // Event listeners
   function onBirthdayChange() {
     closeClockEdit(); // Bug #4: close popup on birthday change
     const val = $('mb-birthday').value;
+    if (val && val > todayISO()) {
+      // Safety net: some browsers let typed dates slip past the max attribute
+      $('mb-age-badge').innerHTML = `<div class="check-card warn">
+        <div class="check-icon">⚠️</div>
+        <div class="check-content">
+          <div class="check-title">Birthday can't be in the future</div>
+          <div class="check-detail">Pick the date your baby was born.</div>
+        </div>
+      </div>`;
+      $('mb-routine-section').style.display = 'none';
+      $('mb-clock').innerHTML = '';
+      $('mb-comparison').innerHTML = '';
+      $('mb-advice').innerHTML = '';
+      return;
+    }
     mb.birthday = val;
     saveMB();
     if (val) {
